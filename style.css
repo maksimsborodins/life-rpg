@@ -1,0 +1,136 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0d0d0d;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+.nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  display: flex;
+  background: #1a1a2e;
+  border-top: 1px solid #333;
+  z-index: 100;
+}
+
+.nav-btn {
+  flex: 1;
+  padding: 14px 0;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.nav-btn.active {
+  color: #c084fc;
+  border-top: 2px solid #c084fc;
+}
+
+.tab { display: none; padding: 24px 16px; }
+.tab.active { display: block; }
+
+h2 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #c084fc;
+  letter-spacing: 0.5px;
+}
+
+/* SPHERES */
+.sphere-item {
+  background: #1a1a2e;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.sphere-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.sphere-name { font-weight: 600; font-size: 15px; }
+.sphere-score { color: #c084fc; font-size: 18px; font-weight: 700; }
+
+.sphere-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: #333;
+  outline: none;
+}
+
+.sphere-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #c084fc;
+  cursor: pointer;
+}
+
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover { background: #6d28d9; }
+
+.btn-day {
+  background: #065f46;
+  margin-bottom: 20px;
+}
+.btn-day:hover { background: #047857; }
+.btn-day:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+/* WHEEL */
+#tab-wheel {
+  display: none;
+  align-items: center;
+  flex-direction: column;
+}
+#tab-wheel.active { display: flex; }
+#wheel-canvas { max-width: 100%; }
+
+/* DAYS */
+.days-stats {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 16px;
+}
+
+#days-grid {
+  display: grid;
+  grid-template-columns: repeat(40, 1fr);
+  gap: 2px;
+}
+
+.day-cell {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: #1a1a2e;
+  cursor: default;
+  transition: background 0.3s;
+}
+
+.day-cell.done { background: #7c3aed; }
+.day-cell.today { outline: 2px solid #c084fc; }

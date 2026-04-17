@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Life RPG">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png">
+  <title>Life RPG</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <button class="nav-btn active" data-tab="spheres">⚔️ Сферы</button>
+    <button class="nav-btn" data-tab="wheel">🎯 Колесо</button>
+    <button class="nav-btn" data-tab="days">📅 Дни</button>
+  </nav>
+
+  <!-- SPHERES -->
+  <div id="tab-spheres" class="tab active">
+    <h2>Прокачка сфер</h2>
+    <div id="spheres-list"></div>
+    <button id="save-spheres" class="btn-primary">💾 Сохранить</button>
+  </div>
+
+  <!-- WHEEL -->
+  <div id="tab-wheel" class="tab">
+    <h2>Колесо баланса</h2>
+    <canvas id="wheel-canvas" width="320" height="320"></canvas>
+  </div>
+
+  <!-- DAYS -->
+  <div id="tab-days" class="tab">
+    <h2>10 000 дней</h2>
+    <div class="days-stats">
+      <span id="days-done">0</span> / 10000 дней прожито
+    </div>
+    <button id="close-day-btn" class="btn-primary btn-day">✅ Закрыть сегодняшний день</button>
+    <div id="days-grid"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
