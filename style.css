@@ -96,12 +96,19 @@ h2 {
 .btn-primary:hover { background: #6d28d9; }
 
 .btn-day {
-  background: #064e3b;
-  margin-bottom: 16px;
+  background: linear-gradient(135deg, #064e3b, #065f46);
+  margin-bottom: 20px;
   margin-top: 10px;
+  border: 1px solid #0d9966;
+  letter-spacing: 0.3px;
 }
-.btn-day:hover { background: #065f46; }
-.btn-day:disabled { background: #1a2a22; color: #4ade80; cursor: not-allowed; }
+.btn-day:hover { background: linear-gradient(135deg, #065f46, #047857); }
+.btn-day:disabled {
+  background: #111;
+  color: #4ade80;
+  border-color: #1a3a28;
+  cursor: not-allowed;
+}
 
 /* WHEEL */
 #tab-wheel {
@@ -112,28 +119,46 @@ h2 {
 #tab-wheel.active { display: flex; }
 #wheel-canvas { max-width: 100%; }
 
-/* DAYS META */
+/* ===== DAYS / ОСТАТОК ===== */
+
 .days-meta {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.days-meta-left {
+  font-size: 13px;
+  color: #888;
+}
+
+.days-meta-left strong {
+  color: #c084fc;
+  font-size: 15px;
+}
+
+.days-meta-right {
   font-size: 12px;
   color: #555;
-  margin-bottom: 6px;
+  background: #1a1a2e;
+  padding: 3px 8px;
+  border-radius: 20px;
 }
 
 .days-progress-bar {
-  height: 3px;
-  background: #1e1e2e;
-  border-radius: 2px;
-  margin-bottom: 0;
+  height: 4px;
+  background: #1a1a2e;
+  border-radius: 4px;
+  margin-bottom: 20px;
   overflow: hidden;
 }
 
 #days-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #7c3aed, #c084fc);
-  border-radius: 2px;
-  transition: width 0.4s ease;
+  background: linear-gradient(90deg, #4c1d95, #7c3aed, #c084fc);
+  border-radius: 4px;
+  transition: width 0.5s ease;
   width: 0%;
 }
 
@@ -141,45 +166,61 @@ h2 {
 #years-grid {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  margin-top: 14px;
+  gap: 6px;
   width: 100%;
 }
 
 .year-row {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
   width: 100%;
+  padding: 5px 6px;
+  border-radius: 8px;
+  background: #111118;
+  border: 1px solid #1e1e2e;
+  transition: border-color 0.2s;
+}
+
+.year-row.current-year {
+  border-color: #7c3aed;
+  background: #13111f;
 }
 
 .year-label {
-  font-size: 9px;
+  font-size: 10px;
+  font-weight: 600;
   color: #444;
-  min-width: 28px;
+  min-width: 32px;
   text-align: right;
-  margin-right: 4px;
+  margin-right: 8px;
   flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+
+.year-row.current-year .year-label {
+  color: #a855f7;
 }
 
 .year-cells {
   display: grid;
   grid-template-columns: repeat(365, 1fr);
-  gap: 1px;
+  gap: 1.5px;
   flex: 1;
 }
 
 .day-cell {
   aspect-ratio: 1;
   border-radius: 1px;
-  background: #1c1c2e;
+  background: #1e1e30;
 }
 
 .day-cell.done {
-  background: #7c3aed;
+  background: #6d28d9;
 }
 
 .day-cell.today {
-  background: #e879f9;
-  box-shadow: 0 0 2px #e879f9;
+  background: #f0abfc;
+  border-radius: 2px;
+  box-shadow: 0 0 4px #c084fc;
 }
