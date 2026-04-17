@@ -5,25 +5,25 @@ body {
   color: #e0e0e0;
   font-family: 'Segoe UI', sans-serif;
   min-height: 100vh;
-  padding-bottom: 80px;
+  padding-bottom: 70px;
 }
 
 .nav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   display: flex;
-  background: #1a1a2e;
-  border-top: 1px solid #333;
+  background: #111;
+  border-top: 1px solid #2a2a2a;
   z-index: 100;
 }
 
 .nav-btn {
   flex: 1;
-  padding: 14px 0;
+  padding: 13px 0;
   background: none;
   border: none;
-  color: #888;
-  font-size: 13px;
+  color: #555;
+  font-size: 12px;
   cursor: pointer;
   transition: color 0.2s;
 }
@@ -33,22 +33,22 @@ body {
   border-top: 2px solid #c084fc;
 }
 
-.tab { display: none; padding: 24px 16px; }
+.tab { display: none; padding: 20px 14px; }
 .tab.active { display: block; }
 
 h2 {
-  font-size: 20px;
-  margin-bottom: 20px;
+  font-size: 18px;
+  margin-bottom: 16px;
   color: #c084fc;
   letter-spacing: 0.5px;
 }
 
 /* SPHERES */
 .sphere-item {
-  background: #1a1a2e;
+  background: #161622;
   border-radius: 12px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
 }
 
 .sphere-header {
@@ -58,21 +58,21 @@ h2 {
   margin-bottom: 8px;
 }
 
-.sphere-name { font-weight: 600; font-size: 15px; }
-.sphere-score { color: #c084fc; font-size: 18px; font-weight: 700; }
+.sphere-name { font-weight: 600; font-size: 14px; }
+.sphere-score { color: #c084fc; font-size: 17px; font-weight: 700; }
 
 .sphere-slider {
   width: 100%;
   -webkit-appearance: none;
-  height: 6px;
+  height: 5px;
   border-radius: 3px;
-  background: #333;
+  background: #2a2a3e;
   outline: none;
 }
 
 .sphere-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 20px; height: 20px;
+  width: 18px; height: 18px;
   border-radius: 50%;
   background: #c084fc;
   cursor: pointer;
@@ -81,26 +81,27 @@ h2 {
 .btn-primary {
   display: block;
   width: 100%;
-  padding: 14px;
+  padding: 13px;
   background: #7c3aed;
   color: white;
   border: none;
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 16px;
+  margin-top: 14px;
   transition: background 0.2s;
 }
 
 .btn-primary:hover { background: #6d28d9; }
 
 .btn-day {
-  background: #065f46;
-  margin-bottom: 20px;
+  background: #064e3b;
+  margin-bottom: 14px;
+  margin-top: 10px;
 }
-.btn-day:hover { background: #047857; }
-.btn-day:disabled { background: #333; color: #666; cursor: not-allowed; }
+.btn-day:hover { background: #065f46; }
+.btn-day:disabled { background: #1a2a22; color: #4ade80; cursor: not-allowed; }
 
 /* WHEEL */
 #tab-wheel {
@@ -111,26 +112,71 @@ h2 {
 #tab-wheel.active { display: flex; }
 #wheel-canvas { max-width: 100%; }
 
-/* DAYS */
-.days-stats {
-  font-size: 14px;
-  color: #888;
-  margin-bottom: 16px;
+/* DAYS STATS */
+.days-stats-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
+.stat-box {
+  flex: 1;
+  background: #161622;
+  border-radius: 10px;
+  padding: 10px 6px;
+  text-align: center;
+}
+
+.stat-val {
+  font-size: 17px;
+  font-weight: 700;
+  color: #c084fc;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: #555;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* PROGRESS BAR */
+.days-progress-bar {
+  height: 4px;
+  background: #1e1e2e;
+  border-radius: 2px;
+  margin-bottom: 4px;
+  overflow: hidden;
+}
+
+#days-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7c3aed, #c084fc);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+/* DAYS GRID */
 #days-grid {
   display: grid;
-  grid-template-columns: repeat(40, 1fr);
-  gap: 2px;
+  grid-template-columns: repeat(100, 1fr);
+  gap: 1px;
+  width: 100%;
 }
 
 .day-cell {
   aspect-ratio: 1;
-  border-radius: 2px;
+  border-radius: 1px;
   background: #1a1a2e;
-  cursor: default;
-  transition: background 0.3s;
 }
 
-.day-cell.done { background: #7c3aed; }
-.day-cell.today { outline: 2px solid #c084fc; }
+.day-cell.done {
+  background: #7c3aed;
+}
+
+.day-cell.today {
+  background: #c084fc;
+  box-shadow: 0 0 3px #c084fc;
+}

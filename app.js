@@ -20,13 +20,11 @@ function saveData(data) {
 }
 
 function getScores() {
-  const d = loadData();
-  return d.scores || {};
+  return loadData().scores || {};
 }
 
 function getDoneDays() {
-  const d = loadData();
-  return d.doneDays || [];
+  return loadData().doneDays || [];
 }
 
 // --- NAV ---
@@ -59,7 +57,6 @@ function renderSpheres() {
     `;
     container.appendChild(div);
   });
-
   container.querySelectorAll('.sphere-slider').forEach(slider => {
     slider.addEventListener('input', () => {
       document.getElementById('score-' + slider.dataset.id).textContent = slider.value;
@@ -86,13 +83,12 @@ function drawWheel() {
   const scores = getScores();
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
-  const R = cx - 20;
+  const R = cx - 28;
   const n = SPHERES.length;
   const step = (Math.PI * 2) / n;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Background rings
   for (let i = 10; i >= 1; i--) {
     ctx.beginPath();
     for (let j = 0; j < n; j++) {
@@ -103,12 +99,11 @@ function drawWheel() {
       j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
     ctx.closePath();
-    ctx.strokeStyle = '#222';
+    ctx.strokeStyle = i % 2 === 0 ? '#2a2a3e' : '#1e1e30';
     ctx.lineWidth = 1;
     ctx.stroke();
   }
 
-  // Dividers
   for (let j = 0; j < n; j++) {
     const angle = step * j - Math.PI / 2;
     ctx.beginPath();
@@ -119,7 +114,6 @@ function drawWheel() {
     ctx.stroke();
   }
 
-  // Filled area
   ctx.beginPath();
   SPHERES.forEach((s, j) => {
     const val = scores[s.id] ?? 5;
@@ -130,21 +124,20 @@ function drawWheel() {
     j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
   ctx.closePath();
-  ctx.fillStyle = 'rgba(124, 58, 237, 0.4)';
+  ctx.fillStyle = 'rgba(124, 58, 237, 0.35)';
   ctx.fill();
   ctx.strokeStyle = '#c084fc';
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Labels
   SPHERES.forEach((s, j) => {
     const angle = step * j - Math.PI / 2;
-    const r = R + 16;
+    const r = R + 20;
     const x = cx + r * Math.cos(angle);
     const y = cy + r * Math.sin(angle);
     const val = scores[s.id] ?? 5;
     const emoji = s.name.split(' ')[0];
-    ctx.font = '13px Segoe UI';
+    ctx.font = 'bold 12px Segoe UI';
     ctx.fillStyle = s.color;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -159,27 +152,32 @@ function getTodayStr() {
 
 function renderDays() {
   const done = getDoneDays();
-  const grid = document.getElementById('days-grid');
-  const today = getTodayStr();
-  grid.innerHTML = '';
+  const remaining = TOTAL_DAYS - done.length;
+  const pct = ((done.length / TOTAL_DAYS) * 100).toFixed(2);
 
   document.getElementById('days-done').textContent = done.length;
+  document.getElementById('days-remaining').textContent = remaining;
+  document.getElementById('days-pct').textContent = pct + '%';
+
+  // Progress bar
+  document.getElementById('days-progress-fill').style.width = pct + '%';
+
+  const grid = document.getElementById('days-grid');
+  grid.innerHTML = '';
 
   for (let i = 0; i < TOTAL_DAYS; i++) {
     const cell = document.createElement('div');
     cell.className = 'day-cell';
-    if (done[i]) {
+    if (i < done.length) {
       cell.classList.add('done');
-      cell.title = done[i];
-    }
-    if (i === done.length) {
+    } else if (i === done.length) {
       cell.classList.add('today');
     }
     grid.appendChild(cell);
   }
 
   const btn = document.getElementById('close-day-btn');
-  const alreadyDone = done.includes(today);
+  const alreadyDone = done.includes(getTodayStr());
   btn.disabled = alreadyDone;
   btn.textContent = alreadyDone ? '✅ День уже закрыт' : '✅ Закрыть сегодняшний день';
 }
