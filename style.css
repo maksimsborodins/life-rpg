@@ -38,7 +38,7 @@ body {
 
 h2 {
   font-size: 18px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   color: #c084fc;
   letter-spacing: 0.5px;
 }
@@ -97,7 +97,7 @@ h2 {
 
 .btn-day {
   background: #064e3b;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   margin-top: 10px;
 }
 .btn-day:hover { background: #065f46; }
@@ -112,41 +112,20 @@ h2 {
 #tab-wheel.active { display: flex; }
 #wheel-canvas { max-width: 100%; }
 
-/* DAYS STATS */
-.days-stats-row {
+/* DAYS META */
+.days-meta {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.stat-box {
-  flex: 1;
-  background: #161622;
-  border-radius: 10px;
-  padding: 10px 6px;
-  text-align: center;
-}
-
-.stat-val {
-  font-size: 17px;
-  font-weight: 700;
-  color: #c084fc;
-}
-
-.stat-label {
-  font-size: 10px;
+  justify-content: space-between;
+  font-size: 12px;
   color: #555;
-  margin-top: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  margin-bottom: 6px;
 }
 
-/* PROGRESS BAR */
 .days-progress-bar {
-  height: 4px;
+  height: 3px;
   background: #1e1e2e;
   border-radius: 2px;
-  margin-bottom: 4px;
+  margin-bottom: 0;
   overflow: hidden;
 }
 
@@ -158,18 +137,42 @@ h2 {
   width: 0%;
 }
 
-/* DAYS GRID */
-#days-grid {
-  display: grid;
-  grid-template-columns: repeat(100, 1fr);
-  gap: 1px;
+/* YEARS GRID */
+#years-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 14px;
   width: 100%;
+}
+
+.year-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+
+.year-label {
+  font-size: 9px;
+  color: #444;
+  min-width: 28px;
+  text-align: right;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.year-cells {
+  display: grid;
+  grid-template-columns: repeat(365, 1fr);
+  gap: 1px;
+  flex: 1;
 }
 
 .day-cell {
   aspect-ratio: 1;
   border-radius: 1px;
-  background: #1a1a2e;
+  background: #1c1c2e;
 }
 
 .day-cell.done {
@@ -177,6 +180,6 @@ h2 {
 }
 
 .day-cell.today {
-  background: #c084fc;
-  box-shadow: 0 0 3px #c084fc;
+  background: #e879f9;
+  box-shadow: 0 0 2px #e879f9;
 }

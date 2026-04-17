@@ -34,25 +34,13 @@
   <!-- DAYS -->
   <div id="tab-days" class="tab">
     <h2>⏳ Остаток</h2>
-    <div class="days-stats-row">
-      <div class="stat-box">
-        <div class="stat-val" id="days-done">0</div>
-        <div class="stat-label">прожито</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" id="days-remaining">10000</div>
-        <div class="stat-label">осталось</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" id="days-pct">0%</div>
-        <div class="stat-label">пройдено</div>
-      </div>
+    <div class="days-meta">
+      <span id="days-done-label">0 / 10950 дней</span>
+      <span id="days-pct-label">0%</span>
     </div>
-    <div class="days-progress-bar">
-      <div id="days-progress-fill"></div>
-    </div>
+    <div class="days-progress-bar"><div id="days-progress-fill"></div></div>
     <button id="close-day-btn" class="btn-primary btn-day">✅ Закрыть сегодняшний день</button>
-    <div id="days-grid"></div>
+    <div id="years-grid"></div>
   </div>
 
   <script src="app.js"></script>

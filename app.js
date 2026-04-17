@@ -9,7 +9,9 @@ const SPHERES = [
   { id: 'growth',    name: '📚 Развитие',    color: '#34d399' },
 ];
 
-const TOTAL_DAYS = 10000;
+const YEARS = 30;
+const DAYS_PER_YEAR = 365;
+const TOTAL_DAYS = YEARS * DAYS_PER_YEAR; // 10950
 
 function loadData() {
   return JSON.parse(localStorage.getItem('lifeRPG') || '{}');
@@ -25,6 +27,10 @@ function getScores() {
 
 function getDoneDays() {
   return loadData().doneDays || [];
+}
+
+function getTodayStr() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 // --- NAV ---
@@ -146,34 +152,46 @@ function drawWheel() {
 }
 
 // --- DAYS ---
-function getTodayStr() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function renderDays() {
   const done = getDoneDays();
-  const remaining = TOTAL_DAYS - done.length;
-  const pct = ((done.length / TOTAL_DAYS) * 100).toFixed(2);
+  const doneCount = done.length;
+  const pct = ((doneCount / TOTAL_DAYS) * 100).toFixed(1);
 
-  document.getElementById('days-done').textContent = done.length;
-  document.getElementById('days-remaining').textContent = remaining;
-  document.getElementById('days-pct').textContent = pct + '%';
-
-  // Progress bar
+  document.getElementById('days-done-label').textContent = doneCount + ' / ' + TOTAL_DAYS + ' дней';
+  document.getElementById('days-pct-label').textContent = pct + '%';
   document.getElementById('days-progress-fill').style.width = pct + '%';
 
-  const grid = document.getElementById('days-grid');
-  grid.innerHTML = '';
+  const container = document.getElementById('years-grid');
+  container.innerHTML = '';
 
-  for (let i = 0; i < TOTAL_DAYS; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'day-cell';
-    if (i < done.length) {
-      cell.classList.add('done');
-    } else if (i === done.length) {
-      cell.classList.add('today');
+  const startYear = new Date().getFullYear();
+
+  for (let y = 0; y < YEARS; y++) {
+    const row = document.createElement('div');
+    row.className = 'year-row';
+
+    const label = document.createElement('div');
+    label.className = 'year-label';
+    label.textContent = startYear + y;
+    row.appendChild(label);
+
+    const cells = document.createElement('div');
+    cells.className = 'year-cells';
+
+    for (let d = 0; d < DAYS_PER_YEAR; d++) {
+      const idx = y * DAYS_PER_YEAR + d;
+      const cell = document.createElement('div');
+      cell.className = 'day-cell';
+      if (idx < doneCount) {
+        cell.classList.add('done');
+      } else if (idx === doneCount) {
+        cell.classList.add('today');
+      }
+      cells.appendChild(cell);
     }
-    grid.appendChild(cell);
+
+    row.appendChild(cells);
+    container.appendChild(row);
   }
 
   const btn = document.getElementById('close-day-btn');
