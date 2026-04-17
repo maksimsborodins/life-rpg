@@ -34,12 +34,20 @@
   <!-- DAYS -->
   <div id="tab-days" class="tab">
     <h2>⏳ Остаток</h2>
+
     <div class="days-meta">
-      <span id="days-done-label">0 / 10950 дней</span>
-      <span id="days-pct-label">0%</span>
+      <div class="days-meta-left">
+        <strong id="days-done">0</strong> <span>/ 10 950 дней</span>
+      </div>
+      <div class="days-meta-right" id="days-pct-label">0%</div>
     </div>
-    <div class="days-progress-bar"><div id="days-progress-fill"></div></div>
+
+    <div class="days-progress-bar">
+      <div id="days-progress-fill"></div>
+    </div>
+
     <button id="close-day-btn" class="btn-primary btn-day">✅ Закрыть сегодняшний день</button>
+
     <div id="years-grid"></div>
   </div>
 
