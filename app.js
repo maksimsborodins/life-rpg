@@ -179,7 +179,10 @@ function renderSettingsHabits() {
     const row = document.createElement('div');
     row.className = 'settings-habit-row';
     row.innerHTML = `
-      <span class="settings-habit-name">${h.emoji} ${h.name}</span>
+      <div class="settings-habit-texts">
+        <span class="settings-habit-name">${h.emoji} ${h.name}</span>
+        <span class="settings-habit-purpose-text">${h.purpose || 'Без описания'}</span>
+      </div>
       <button class="btn-remove" data-i="${i}">✕</button>
     `;
     row.querySelector('.btn-remove').addEventListener('click', () => {
@@ -194,16 +197,19 @@ function renderSettingsHabits() {
 
 document.getElementById('add-habit-btn').addEventListener('click', () => {
   const input = document.getElementById('new-habit-input');
+  const purposeInput = document.getElementById('new-habit-purpose');
   const val = input.value.trim();
+  const purpose = purposeInput.value.trim();
   if (!val) return;
   const d = loadData();
   if (!d.habits) d.habits = [];
   const emojiMatch = val.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
   const emoji = emojiMatch ? emojiMatch[0] : '🔹';
   const name = emojiMatch ? val.slice(emoji.length).trim() : val;
-  d.habits.push({ id: 'h_' + Date.now(), emoji, name });
+  d.habits.push({ id: 'h_' + Date.now(), emoji, name, purpose });
   saveData(d);
   input.value = '';
+  purposeInput.value = '';
   renderSettingsHabits();
 });
 
@@ -294,6 +300,7 @@ function renderHabits() {
       <div class="habit-check">${done ? '✅' : '⬜'}</div>
       <div class="habit-info">
         <span class="habit-name">${h.emoji} ${h.name}</span>
+        <span class="habit-purpose">${h.purpose || 'Без описания'}</span>
         <div class="habit-meta">
           <span class="habit-streak">🔥 ${streak} дн.</span>
           ${done ? '<span class="habit-status">Сегодня сделано</span>' : '<span class="habit-status habit-status-muted">Ещё не отмечено</span>'}
@@ -481,4 +488,5 @@ function stopHold() {
 ensureDefaults();
 activateTab('days');
 renderSpheres();
+renderHabits();
 drawWheel();

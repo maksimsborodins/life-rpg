@@ -27,11 +27,12 @@
       <div class="settings-divider"></div>
 
       <div class="settings-section-title">Привычки</div>
-      <p class="settings-hint">Добавь привычки — каждый день отмечай выполненные.</p>
+      <p class="settings-hint">Добавь привычку, её смысл и зачем ты это делаешь.</p>
       <div id="settings-habits-list"></div>
-      <div class="settings-habit-add">
-        <input id="new-habit-input" class="settings-name" type="text" placeholder="Новая привычка..." maxlength="40">
-        <button id="add-habit-btn" class="btn-add">+</button>
+      <div class="settings-habit-form">
+        <input id="new-habit-input" class="settings-name" type="text" placeholder="Название привычки" maxlength="40">
+        <textarea id="new-habit-purpose" class="settings-purpose" placeholder="Смысл / цель / зачем я это делаю" maxlength="140"></textarea>
+        <button id="add-habit-btn" class="btn-primary">➕ Добавить привычку</button>
       </div>
       <button id="settings-habits-save" class="btn-primary">💾 Сохранить привычки</button>
 
