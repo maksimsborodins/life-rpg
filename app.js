@@ -13,43 +13,92 @@ const START_YEAR = 2026;
 const YEARS = 30;
 const DAYS_PER_YEAR = 365;
 const TOTAL_DAYS = YEARS * DAYS_PER_YEAR;
-
-const SEED_DAYS = ["2026-01-01","2026-01-02","2026-01-03","2026-01-04","2026-01-05","2026-01-06","2026-01-07","2026-01-08","2026-01-09","2026-01-10","2026-01-11","2026-01-12","2026-01-13","2026-01-14","2026-01-15","2026-01-16","2026-01-17","2026-01-18","2026-01-19","2026-01-20","2026-01-21","2026-01-22","2026-01-23","2026-01-24","2026-01-25","2026-01-26","2026-01-27","2026-01-28","2026-01-29","2026-01-30","2026-01-31","2026-02-01","2026-02-02","2026-02-03","2026-02-04","2026-02-05","2026-02-06","2026-02-07","2026-02-08","2026-02-09","2026-02-10","2026-02-11","2026-02-12","2026-02-13","2026-02-14","2026-02-15","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-21","2026-02-22","2026-02-23","2026-02-24","2026-02-25","2026-02-26","2026-02-27","2026-02-28","2026-03-01","2026-03-02","2026-03-03","2026-03-04","2026-03-05","2026-03-06","2026-03-07","2026-03-08","2026-03-09","2026-03-10","2026-03-11","2026-03-12","2026-03-13","2026-03-14","2026-03-15","2026-03-16","2026-03-17","2026-03-18","2026-03-19","2026-03-20","2026-03-21","2026-03-22","2026-03-23","2026-03-24","2026-03-25","2026-03-26","2026-03-27","2026-03-28","2026-03-29","2026-03-30","2026-03-31","2026-04-01","2026-04-02","2026-04-03","2026-04-04","2026-04-05","2026-04-06","2026-04-07","2026-04-08","2026-04-09","2026-04-10","2026-04-11","2026-04-12","2026-04-13","2026-04-14","2026-04-15","2026-04-16","2026-04-17","2026-04-18","2026-04-19"];
+const START_DATE = '2026-01-01';
 
 function loadData() { return JSON.parse(localStorage.getItem('lifeRPG') || '{}'); }
 function saveData(d) { localStorage.setItem('lifeRPG', JSON.stringify(d)); }
-function getTodayStr() { return new Date().toISOString().slice(0, 10); }
+function getTodayStr() { return new Date().toLocaleDateString('en-CA'); }
 function getSpheres() { const d = loadData(); return d.spheres || DEFAULT_SPHERES; }
 function getScores() { return loadData().scores || {}; }
-function getDoneDays() { return loadData().doneDays || []; }
 function getTodayImproved() { const d = loadData(); return d.improved || {}; }
+function getOpenedDay() { return loadData().openedDay || ''; }
 
-// --- SEED ---
-function seedDays() {
-  const d = loadData();
-  if (!d.seeded) {
-    d.doneDays = [...SEED_DAYS];
-    d.seeded = true;
-    d.spheres = DEFAULT_SPHERES;
-    d.scores = {};
-    DEFAULT_SPHERES.forEach(s => d.scores[s.id] = 5);
-    saveData(d);
-  }
+function diffDays(from, to) {
+  const a = new Date(from + 'T00:00:00');
+  const b = new Date(to + 'T00:00:00');
+  return Math.floor((b - a) / 86400000);
 }
 
-// --- NAV ---
+function getAutoDoneCount() {
+  const days = diffDays(START_DATE, getTodayStr()) + 1;
+  return Math.max(0, Math.min(TOTAL_DAYS, days));
+}
+
+function isDayOpened() {
+  return getOpenedDay() === getTodayStr();
+}
+
+function openToday() {
+  const d = loadData();
+  d.openedDay = getTodayStr();
+  saveData(d);
+  updateGate();
+}
+
+function updateGate() {
+  const gate = document.getElementById('day-gate');
+  if (isDayOpened()) gate.classList.add('hidden');
+  else gate.classList.remove('hidden');
+}
+
+function ensureDefaults() {
+  const d = loadData();
+  let changed = false;
+
+  if (!d.seeded) {
+    d.seeded = true;
+    changed = true;
+  }
+
+  if (!d.spheres) {
+    d.spheres = DEFAULT_SPHERES;
+    changed = true;
+  }
+
+  if (!d.scores) {
+    d.scores = {};
+    DEFAULT_SPHERES.forEach(s => d.scores[s.id] = 5);
+    changed = true;
+  }
+
+  if (!d.improved) {
+    d.improved = {};
+    changed = true;
+  }
+
+  if (changed) saveData(d);
+}
+
+function activateTab(tabName) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const btn = document.querySelector(`.nav-btn[data-tab="${tabName}"]`);
+  const tab = document.getElementById('tab-' + tabName);
+  if (btn) btn.classList.add('active');
+  if (tab) tab.classList.add('active');
+  if (tabName === 'spheres') {
+    renderSpheres();
+    drawWheel();
+  }
+  if (tabName === 'days') renderDays();
+}
+
+// NAV
 document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    if (btn.dataset.tab === 'spheres') { renderSpheres(); drawWheel(); }
-    if (btn.dataset.tab === 'days') renderDays();
-  });
+  btn.addEventListener('click', () => activateTab(btn.dataset.tab));
 });
 
-// --- SETTINGS ---
+// SETTINGS
 const overlay = document.getElementById('settings-overlay');
 
 document.getElementById('open-settings').addEventListener('click', () => {
@@ -114,7 +163,7 @@ document.getElementById('settings-reset').addEventListener('click', () => {
   }
 });
 
-// --- SPHERES ---
+// SPHERES
 function renderSpheres() {
   const spheres = getSpheres();
   const scores = getScores();
@@ -126,7 +175,7 @@ function renderSpheres() {
   spheres.forEach(s => {
     const val = scores[s.id] ?? 5;
     const isImproved = improved[s.id] === today;
-    const bars = Array.from({length: 10}, (_, i) => {
+    const bars = Array.from({ length: 10 }, (_, i) => {
       const filled = i < val;
       return `<div class="bar-seg ${filled ? 'filled' : ''}" style="${filled ? 'background:' + s.color : ''}"></div>`;
     }).join('');
@@ -144,7 +193,10 @@ function renderSpheres() {
         </div>
       </div>
     `;
-    div.addEventListener('click', () => toggleImproved(s.id));
+    div.addEventListener('click', () => {
+      if (!isDayOpened()) return;
+      toggleImproved(s.id);
+    });
     container.appendChild(div);
   });
 }
@@ -153,16 +205,13 @@ function toggleImproved(id) {
   const d = loadData();
   const today = getTodayStr();
   if (!d.improved) d.improved = {};
-  if (d.improved[id] === today) {
-    delete d.improved[id];
-  } else {
-    d.improved[id] = today;
-  }
+  if (d.improved[id] === today) delete d.improved[id];
+  else d.improved[id] = today;
   saveData(d);
   renderSpheres();
 }
 
-// --- WHEEL ---
+// WHEEL
 function drawWheel() {
   const canvas = document.getElementById('wheel-canvas');
   const ctx = canvas.getContext('2d');
@@ -175,7 +224,6 @@ function drawWheel() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // rings
   for (let i = 10; i >= 1; i--) {
     ctx.beginPath();
     for (let j = 0; j < n; j++) {
@@ -190,16 +238,16 @@ function drawWheel() {
     ctx.stroke();
   }
 
-  // dividers
   for (let j = 0; j < n; j++) {
     const angle = step * j - Math.PI / 2;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
-    ctx.strokeStyle = '#2a2a3e'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = '#2a2a3e';
+    ctx.lineWidth = 1;
+    ctx.stroke();
   }
 
-  // fill each segment with its own color
   spheres.forEach((s, j) => {
     const val = scores[s.id] ?? 5;
     const angleStart = step * j - Math.PI / 2;
@@ -217,26 +265,26 @@ function drawWheel() {
     ctx.stroke();
   });
 
-  // labels
   spheres.forEach((s, j) => {
     const angle = step * j + step / 2 - Math.PI / 2;
     const r = R + 18;
     const x = cx + r * Math.cos(angle), y = cy + r * Math.sin(angle);
-    const val = scores[s.id] ?? 5;
     ctx.font = '11px Segoe UI';
     ctx.fillStyle = s.color;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillText(s.name.split(' ')[0], x, y);
   });
 }
 
-// --- DAYS ---
+// DAYS
 function renderDays() {
-  const done = getDoneDays();
-  const doneCount = done.length;
+  const doneCount = getAutoDoneCount();
   const remaining = TOTAL_DAYS - doneCount;
   const pct = ((doneCount / TOTAL_DAYS) * 100).toFixed(1);
   const currentYear = new Date().getFullYear();
+  const currentYearStartIdx = (currentYear - START_YEAR) * DAYS_PER_YEAR;
+  const passedInCurrentYear = Math.max(0, Math.min(DAYS_PER_YEAR, doneCount - currentYearStartIdx));
 
   document.getElementById('days-done').textContent = doneCount;
   document.getElementById('days-pct-label').textContent = pct + '% • осталось ' + remaining;
@@ -249,12 +297,22 @@ function renderDays() {
     const year = START_YEAR + y;
     const row = document.createElement('div');
     row.className = 'year-row' + (year === currentYear ? ' current-year' : '');
+
     const label = document.createElement('div');
     label.className = 'year-label';
     label.textContent = year;
     row.appendChild(label);
+
+    if (year === currentYear) {
+      const meta = document.createElement('div');
+      meta.className = 'year-current-meta';
+      meta.textContent = passedInCurrentYear + ' / ' + DAYS_PER_YEAR;
+      row.appendChild(meta);
+    }
+
     const cells = document.createElement('div');
     cells.className = 'year-cells';
+
     for (let d = 0; d < DAYS_PER_YEAR; d++) {
       const idx = y * DAYS_PER_YEAR + d;
       const cell = document.createElement('div');
@@ -263,28 +321,27 @@ function renderDays() {
       else if (idx === doneCount) cell.classList.add('today');
       cells.appendChild(cell);
     }
+
     row.appendChild(cells);
     container.appendChild(row);
   }
 
   const btn = document.getElementById('close-day-btn');
-  const alreadyDone = done.includes(getTodayStr());
-  btn.disabled = alreadyDone;
-  btn.textContent = alreadyDone ? '✅ День уже закрыт' : '✅ Закрыть сегодняшний день';
+  btn.disabled = true;
+  btn.textContent = isDayOpened() ? '✅ День уже начат' : '⏳ Сначала начни новый день';
 }
 
-document.getElementById('close-day-btn').addEventListener('click', () => {
-  const d = loadData();
-  const today = getTodayStr();
-  if (!d.doneDays) d.doneDays = [];
-  if (!d.doneDays.includes(today)) {
-    d.doneDays.push(today);
-    saveData(d);
-    renderDays();
-  }
+document.getElementById('start-day-btn').addEventListener('click', () => {
+  openToday();
+  activateTab('spheres');
 });
 
-// --- INIT ---
-seedDays();
-renderSpheres();
-drawWheel();
+document.getElementById('close-day-btn').addEventListener('click', () => {
+  if (!isDayOpened()) return;
+  activateTab('spheres');
+});
+
+// INIT
+ensureDefaults();
+updateGate();
+activateTab('days');
