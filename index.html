@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
@@ -53,39 +53,31 @@
         </div>
     </div>
 
-    <nav class="nav">
-        <button class="nav-btn" data-tab="spheres"><span>🌀</span><span>Сферы</span></button>
-        <button class="nav-btn" data-tab="habits"><span>✅</span><span>Привычки</span></button>
-        <button class="nav-btn" data-tab="days"><span>⏳</span><span>Остаток</span></button>
-        <button id="open-settings" class="nav-btn"><span>⚙️</span><span>Настройки</span></button>
-    </nav>
+    <header class="app-header">
+        <div class="header-content">
+            <h1 class="logo">Life RPG</h1>
+            <button id="open-settings" class="icon-btn">⚙️</button>
+        </div>
+    </header>
 
-    <main>
-        <div id="spheres" class="tab active" data-tab="spheres">
-            <h2>🌀 Сферы</h2>
-            <div id="spheres-list"></div>
-            <div class="wheel-section">
-                <div class="section-title">Колесо баланса</div>
-                <canvas id="wheel-canvas"></canvas>
+    <main class="dashboard">
+        <!-- HERO SECTION: Ostatok -->
+        <section class="hero-card">
+            <div class="hero-top">
+                <div class="hero-title">Твоё время ограничено</div>
+                <div class="hero-subtitle">Каждый день — это шанс.</div>
             </div>
-        </div>
-
-        <div id="habits" class="tab" data-tab="habits">
-            <h2>✅ Привычки</h2>
-            <div id="habits-container"></div>
-        </div>
-
-        <div id="days" class="tab" data-tab="days">
-            <h2>⏳ Остаток</h2>
             
-            <div class="days-hero">
-                <div class="days-hero-title">Твоё время ограничено</div>
-                <div class="days-hero-subtitle">Каждый день либо прожит осознанно, либо исчезает сам.</div>
-            </div>
-
-            <div class="days-meta">
-                <div class="days-meta-left"><span id="days-count">0</span> / 10 950 дней</div>
-                <div class="days-meta-right"><span id="days-percent">0</span>% пройдено</div>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="days-count">0</span>
+                    <span class="stat-label">дней прожито</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-value" id="days-percent">0</span>%
+                    <span class="stat-label">пути</span>
+                </div>
             </div>
 
             <div id="ritual-container" class="day-ritual">
@@ -94,10 +86,41 @@
                     <div class="start-day-text" id="start-day-text">Удерживай, чтобы начать день</div>
                 </div>
             </div>
+        </section>
 
-            <div class="section-title">30 лет вперёд</div>
-            <div id="years-grid"></div>
-        </div>
+        <!-- SPHERES SECTION: Quick View Grid -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2 class="section-title-main">🌀 Сферы</h2>
+            </div>
+            <div id="spheres-grid" class="spheres-grid"></div>
+        </section>
+
+        <!-- HABITS SECTION: Daily List -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2 class="section-title-main">✅ Привычки</h2>
+            </div>
+            <div id="habits-container" class="habits-list"></div>
+        </section>
+
+        <!-- ANALYSIS SECTION: Wheel & Years -->
+        <section class="dashboard-section analysis-section">
+            <div class="section-header">
+                <h2 class="section-title-main">📊 Анализ</h2>
+            </div>
+            <div class="analysis-tabs">
+                <button class="analysis-tab active" data-type="wheel">Колесо</button>
+                <button class="analysis-tab" data-type="years">30 лет</button>
+            </div>
+            
+            <div id="wheel-view" class="analysis-view">
+                <canvas id="wheel-canvas"></canvas>
+            </div>
+            <div id="years-view" class="analysis-view hidden">
+                <div id="years-grid"></div>
+            </div>
+        </section>
     </main>
 
     <script src="app.js"></script>
