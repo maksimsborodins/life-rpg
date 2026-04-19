@@ -240,7 +240,10 @@ function setupEventListeners() {
     const exportBtn = document.getElementById('export-btn');
     const importInput = document.getElementById('import-input');
 
-    if (openBtn) openBtn.onclick = () => { renderSettings(); ui.settingsModal.classList.remove('hidden'); };
+    if (openBtn) openBtn.onclick = () => {
+        ui.settingsModal.classList.remove('hidden');
+        requestAnimationFrame(() => renderSettings());
+    };
     if (closeBtn) closeBtn.onclick = () => ui.settingsModal.classList.add('hidden');
 
     if (saveBtn) saveBtn.onclick = () => {
