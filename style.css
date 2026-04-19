@@ -2,13 +2,13 @@
   --p4: 4px; --p8: 8px; --p12: 12px; --p16: 16px; --p24: 24px; --p32: 32px; --p48: 48px;
   --bg-main: #050608;
   --bg-sidebar: #0a0c10;
-  --bg-card: rgba(18, 20, 26, 0.7);
+  --bg-card: rgba(18, 20, 26, 0.4); /* Made even more transparent */
   --bg-hover: rgba(255, 255, 255, 0.05);
   --accent: #c084fc;
   --accent-gradient: linear-gradient(135deg, #c084fc 0%, #818cf8 100%);
   --text-main: #ffffff;
   --text-muted: #94a3b8;
-  --border: rgba(255, 255, 255, 0.1);
+  --border: rgba(255, 255, 255, 0.05); /* Very subtle border */
   --glass: blur(24px);
   --shadow: 0 10px 40px rgba(0,0,0,0.5);
 }
@@ -43,7 +43,7 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
   gap: var(--p12);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.nav-item.active { background: var(--bg-hover); color: var(--text-main); box-shadow: inset 0 0 0 1px var(--border); }
+.nav-item.active { background: var(--bg-hover); color: var(--text-main); }
 .nav-item:hover { background: var(--bg-hover); color: var(--text-main); }
 
 /* Main Dashboard Area */
@@ -54,58 +54,50 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
   display: flex;
   flex-direction: column;
   gap: var(--p32);
-  scroll-behavior: smooth;
 }
 .header-row { 
   display: flex; 
   justify-content: space-between; 
   align-items: center; 
-  padding-bottom: var(--p8);
+  padding-bottom: var(--p16);
   border-bottom: 1px solid var(--border);
 }
-.greeting h2 { font-size: 32px; font-weight: 800; margin-bottom: var(--p4); letter-spacing: -0.5px; }
-.date-text { color: var(--text-muted); font-size: 14px; font-weight: 500; }
+.greeting h2 { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; }
 
 /* Stats Widgets Row */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--p24);
-  margin-top: var(--p8); /* Prevent overlap with header */
 }
 .stat-card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
   border-radius: var(--p24);
   padding: var(--p24);
   backdrop-filter: var(--glass);
-  box-shadow: var(--shadow);
-  transition: transform 0.3s ease;
+  /* Removed explicit border for cleaner look, using subtle box shadow or very light border */
+  border: 1px solid rgba(255,255,255,0.03);
 }
-.stat-card:hover { transform: translateY(-4px); }
 .stat-header { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: var(--p12); font-weight: 700; }
-.stat-main { font-size: 36px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.stat-trend { font-size: 12px; margin-top: var(--p12); color: var(--accent); font-weight: 600; }
+.stat-main { font-size: 36px; font-weight: 800; }
 
 /* Content Grid Pattern */
 .content-layout {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
   gap: var(--p32);
-  margin-top: var(--p16); /* Add more space from stats */
 }
 .main-column, .side-column { display: flex; flex-direction: column; gap: var(--p32); }
 
 .card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255,255,255,0.03);
   border-radius: var(--p32);
   padding: var(--p32);
   backdrop-filter: var(--glass);
-  box-shadow: var(--shadow);
 }
-.card-title { margin-bottom: var(--p24); display: flex; justify-content: space-between; align-items: center; }
-.card-title h3 { font-size: 20px; font-weight: 700; color: var(--text-main); }
+.card-title { margin-bottom: var(--p24); }
+.card-title h3 { font-size: 20px; font-weight: 700; }
 
 /* Spheres List Modern */
 .spheres-grid { display: grid; grid-template-columns: 1fr; gap: var(--p16); }
@@ -113,16 +105,14 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
   padding: var(--p24);
   border-radius: var(--p20);
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border);
-  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.03);
 }
-.sphere-item:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--accent); }
 .sphere-name { font-weight: 700; font-size: 16px; margin-bottom: var(--p16); display: block; }
 .level-track { height: 8px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
-.level-fill { height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(192, 132, 252, 0.3); }
+.level-fill { height: 100%; transition: width 0.8s ease; }
 
 /* Habits List Modern */
-.habit-list { display: flex; flex-direction: column; gap: var(--p16); }
+.habit-list { display: flex; flex-direction: column; gap: var(--p12); }
 .habit-card {
   display: flex;
   align-items: center;
@@ -131,30 +121,38 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
   background: rgba(255,255,255,0.02);
   border-radius: var(--p20);
   cursor: pointer;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255,255,255,0.03);
   transition: all 0.2s ease;
-  user-select: none;
 }
-.habit-card:hover { border-color: var(--accent); background: rgba(255,255,255,0.05); transform: translateX(8px); }
-.habit-card.done { opacity: 0.6; }
+.habit-card:hover { background: rgba(255,255,255,0.04); transform: translateX(4px); }
+.habit-card.done { background: rgba(192, 132, 252, 0.05); border-color: rgba(192, 132, 252, 0.1); }
+
 .checkbox { 
-  width: 28px; height: 28px; 
-  border: 2px solid var(--border); 
-  border-radius: 10px; 
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 24px; height: 24px; 
+  border: 2px solid rgba(255,255,255,0.1); 
+  border-radius: 8px; 
   flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
 }
-.habit-card:hover .checkbox { border-color: var(--accent); }
 .habit-card.done .checkbox { background: var(--accent); border-color: var(--accent); }
-.habit-card.done .checkbox::after {
-  content: "✓"; color: white; font-weight: 800; font-size: 18px;
+.habit-card.done .checkbox::after { content: "✓"; color: white; font-size: 14px; font-weight: 900; }
+
+.habit-info { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; }
+.h-name { font-weight: 600; font-size: 16px; }
+
+/* Streak Fire Styling */
+.h-streak-badge {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 12px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 800;
+    font-size: 14px;
+    color: #ff9d00;
+    box-shadow: 0 4px 12px rgba(255, 157, 0, 0.1);
 }
-.habit-info { flex-grow: 1; }
-.h-name { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
-.h-streak { font-size: 12px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* Action Button */
 .btn-hero {
@@ -164,14 +162,10 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
   border-radius: var(--p16);
   border: none;
   font-weight: 800;
-  font-size: 15px;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(192, 132, 252, 0.2);
   transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
-.btn-hero:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(192, 132, 252, 0.3); }
+.btn-hero:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
 /* Modal */
 .modal {
@@ -183,15 +177,11 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
   background: var(--bg-sidebar); width: 600px; max-height: 85vh; 
   border-radius: var(--p48); border: 1px solid var(--border);
   padding: var(--p48); overflow-y: auto;
-  box-shadow: 0 40px 100px rgba(0,0,0,0.8);
 }
 
 #balance-wheel-canvas {
- filter: drop-shadow(0 0 30px rgba(192, 132, 252, 0.15));
- transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
- cursor: crosshair;
+ filter: drop-shadow(0 0 30px rgba(192, 132, 252, 0.1));
 }
 
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
