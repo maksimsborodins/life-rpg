@@ -280,6 +280,36 @@ function renderSettings() {
         `;
         ui.settingsSpheres.appendChild(row);
     });
+
+    // ← НОВЫЙ БЛОК: список привычек с удалением
+    const habitsContainer = document.getElementById('settings-habits');
+    if (!habitsContainer) return;
+    habitsContainer.innerHTML = '<p style="color:var(--text-muted); font-size:13px; margin-bottom:12px;">Привычки</p>';
+
+    if (data.habits.length === 0) {
+        habitsContainer.innerHTML += '<p style="color:var(--text-muted); font-size:13px;">Нет привычек</p>';
+        return;
+    }
+
+    data.habits.forEach((h, i) => {
+        const row = document.createElement('div');
+        row.style = 'display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:12px; padding:12px 16px; margin-bottom:8px;';
+        row.innerHTML = `
+            <span style="color:white; font-size:14px;">${h.name}</span>
+            <button data-habit-idx="${i}" style="background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3); color:#f87171; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px;">Удалить</button>
+        `;
+        row.querySelector('button').addEventListener('click', () => {
+            deleteHabit(i);
+        });
+        habitsContainer.appendChild(row);
+    });
+}
+
+function deleteHabit(index) {
+    if (!confirm(`Удалить привычку "${data.habits[index].name}"?`)) return;
+    data.habits.splice(index, 1);
+    saveData();
+    renderSettings();
 }
 
 init();
