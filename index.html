@@ -51,7 +51,7 @@
             
             <nav class="nav-links">
                 <li class="nav-item active">📊 Dashboard</li>
-                <li class="nav-item">📈 Аналитика</li>
+                <li id="nav-analysis" class="nav-item">📈 Колесо Баланса</li>
                 <li class="nav-item">🛡️ Квесты</li>
                 <li class="nav-item">🏆 Достижения</li>
             </nav>
@@ -70,6 +70,7 @@
                 <button id="start-day-action" class="btn-hero">Начать новый день</button>
             </header>
 
+            <!-- Stats Widgets -->
             <section class="stats-grid">
                 <div class="stat-card">
                     <p class="stat-header">Дней прожито</p>
@@ -94,11 +95,22 @@
             </section>
 
             <div class="content-layout">
+                <!-- Main Column: Spheres & Balance Wheel -->
                 <div class="main-column">
+                    <!-- Balance Wheel Widget (Central for Dashboard) -->
+                    <section class="card">
+                        <div class="card-title">
+                            <h3>🎡 Колесо Баланса</h3>
+                            <button id="refresh-wheel" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:12px;">Обновить вид</button>
+                        </div>
+                        <div style="display:flex; justify-content:center; align-items:center; padding:var(--p12); min-height:360px;">
+                            <canvas id="balance-wheel-canvas" width="400" height="400" style="max-width:100%; height:auto;"></canvas>
+                        </div>
+                    </section>
+
                     <section class="card">
                         <div class="card-title">
                             <h3>🌀 Сферы Жизни</h3>
-                            <span style="font-size:12px; color:var(--text-muted);">Нажми для прокачки</span>
                         </div>
                         <div id="dashboard-spheres" class="spheres-grid">
                             <!-- Dynamic -->
@@ -106,6 +118,7 @@
                     </section>
                 </div>
 
+                <!-- Side Column: Habits -->
                 <div class="side-column">
                     <section class="card">
                         <div class="card-title">
