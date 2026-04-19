@@ -2,157 +2,120 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> 
-    <link rel="manifest" href="manifest.json">
-    <title>Life RPG | Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life RPG | Dashboard</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Glassmorphism Settings Overlay -->
-    <div id="settings-overlay" class="settings-overlay hidden">
-        <div class="settings-panel">
-            <div class="settings-header">
-                <div class="header-title-group">
-                    <span class="icon-gear">⚙️</span>
-                    <h3>Настройки</h3>
-                </div>
-                <button id="settings-close" class="settings-close-btn" aria-label="Закрыть">✕</button>
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="card-title">
+                <h3>⚙️ Настройки системы</h3>
+                <button id="close-settings" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px;">✕</button>
             </div>
+            
+            <div style="display:flex; flex-direction:column; gap:var(--p32);">
+                <section>
+                    <h4 style="margin-bottom:var(--p16); color:var(--text-muted);">Редактирование сфер</h4>
+                    <div id="settings-spheres" style="display:flex; flex-direction:column; gap:var(--p12);"></div>
+                    <button id="save-spheres" class="btn-hero" style="margin-top:var(--p16); width:100%;">💾 Сохранить сферы</button>
+                </section>
 
-            <div class="settings-content">
-                <!-- Spheres Section -->
-                <div class="settings-section">
-                    <div class="section-label">
-                        <span class="dot primary"></span>
-                        <h4>Сферы жизни</h4>
+                <section>
+                    <h4 style="margin-bottom:var(--p16); color:var(--text-muted);">Управление привычками</h4>
+                    <div id="settings-habits" style="margin-bottom:var(--p24);"></div>
+                    <div style="display:flex; flex-direction:column; gap:var(--p12); padding:var(--p24); background:var(--bg-hover); border-radius:var(--p16);">
+                        <input id="new-habit-name" type="text" placeholder="Название новой привычки" style="background:var(--bg-main); border:1px solid var(--border); padding:var(--p12); color:white; border-radius:var(--p8);">
+                        <textarea id="new-habit-desc" placeholder="Смысл этой привычки" style="background:var(--bg-main); border:1px solid var(--border); padding:var(--p12); color:white; border-radius:var(--p8); height:80px;"></textarea>
+                        <button id="add-habit" class="btn-hero">➕ Добавить привычку</button>
                     </div>
-                    <div id="settings-spheres-list" class="settings-grid"></div>
-                    <div class="section-actions">
-                        <button id="settings-save" class="btn-primary">💾 Сохранить сферы</button>
-                    </div>
-                </div>
+                </section>
 
-                <!-- Habits Section -->
-                <div class="settings-section">
-                    <div class="section-label">
-                        <span class="dot secondary"></span>
-                        <h4>Привычки</h4>
-                    </div>
-                    <div id="settings-habits-list" class="settings-grid"></div>
-                    
-                    <div class="add-habit-form card-glass">
-                        <h5>+ Новая привычка</h5>
-                        <input id="new-habit-input" class="input-glass" type="text" placeholder="Название (например, Медитация)" maxlength="40">
-                        <textarea id="new-habit-purpose" class="input-glass" placeholder="Зачем это нужно? (мотивация)" maxlength="140"></textarea>
-                        <button id="add-habit-btn" class="btn-secondary">➕ Добавить</button>
-                    </div>
-                    
-                    <div class="section-actions">
-                        <button id="settings-save-habits" class="btn-primary">💾 Сохранить список</button>
-                    </div>
-                </div>
+                <section style="padding-top:var(--p24); border-top:1px solid var(--border); display:flex; gap:var(--p12);">
+                    <button id="export-btn" style="flex:1; background:var(--bg-hover); border:1px solid var(--border); color:white; padding:var(--p12); border-radius:var(--p8); cursor:pointer;">📤 Экспорт данных</button>
+                    <button id="import-trigger" style="flex:1; background:var(--bg-hover); border:1px solid var(--border); color:white; padding:var(--p12); border-radius:var(--p8); cursor:pointer;">📥 Импорт данных</button>
+                    <input type="file" id="import-file" style="display:none;">
+                </section>
 
-                <!-- Data Management -->
-                <div class="settings-section">
-                    <div class="section-label">
-                        <span class="dot info"></span>
-                        <h4>Данные и Бэкап</h4>
-                    </div>
-                    <div class="data-actions-grid">
-                        <button id="export-data" class="btn-glass">📤 Экспорт JSON</button>
-                        <button id="import-data-btn" class="btn-glass">📥 Импорт JSON</button>
-                        <input id="import-data-input" type="file" accept="application/json" style="display: none;">
-                    </div>
-                </div>
-
-                <!-- Danger Zone -->
-                <div class="settings-section danger-zone">
-                    <div class="section-label">
-                        <span class="dot danger"></span>
-                        <h4>Опасная зона</h4>
-                    </div>
-                    <p class="section-desc">Действие нельзя будет отменить.</p>
-                    <button id="reset-data" class="btn-danger">🗑️ Сбросить всё</button>
-                </div>
+                <button id="danger-reset" style="background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3); color:#f87171; padding:var(--p12); border-radius:var(--p8); cursor:pointer; margin-top:var(--p24);">🗑️ Сбросить все данные</button>
             </div>
         </div>
     </div>
 
-    <!-- Main Dashboard Application -->
-    <div id="app" class="app-container">
-        <!-- Floating Header -->
-        <header class="main-header">
-            <h1 class="logo">Life RPG</h1>
-            <button id="settings-open" class="btn-icon" aria-label="Настройки">⚙️</button>
-        </header>
+    <div class="app-wrapper">
+        <aside class="sidebar">
+            <div class="logo-container">
+                <h1 class="logo">LIFE RPG</h1>
+            </div>
+            
+            <nav class="nav-links">
+                <li class="nav-item active">📊 Dashboard</li>
+                <li class="nav-item">📈 Аналитика</li>
+                <li class="nav-item">🛡️ Квесты</li>
+                <li class="nav-item">🏆 Достижения</li>
+            </nav>
 
-        <main class="dashboard-scroll">
-            <!-- Hero Progress Card -->
-            <section class="hero-section">
-                <div class="hero-card card-glass-heavy">
-                    <div class="hero-content">
-                        <div class="hero-text">
-                            <span class="hero-label">Твоё время ограничено</span>
-                            <h2 id="hero-title">Каждый день — это шанс.</h2>
-                        </div>
-                        <div class="hero-stats">
-                            <div class="stat-item">
-                                <span id="days-lived" class="stat-value">0</span>
-                                <span class="stat-label">дней прожито</span>
-                            </div>
-                            <div class="stat-divider"></div>
-                            <div class="stat-item">
-                                <span id="life-progress" class="stat-value">0%</span>
-                                <span class="stat-label">пути</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Action Area -->
-                    <div class="hero-footer">
-                        <button id="start-day-btn" class="btn-hero-action">Удерживай, чтобы начать день</button>
-                    </div>
+            <div class="sidebar-footer" style="margin-top:auto;">
+                <li id="open-settings" class="nav-item">⚙️ Настройки</li>
+            </div>
+        </aside>
+
+        <main class="dashboard-container">
+            <header class="header-row">
+                <div class="greeting">
+                    <h2 id="greeting-text">Добрый день, Игрок</h2>
+                    <p class="date-text" id="current-date">Воскресенье, 19 Апреля</p>
+                </div>
+                <button id="start-day-action" class="btn-hero">Начать новый день</button>
+            </header>
+
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <p class="stat-header">Дней прожито</p>
+                    <h3 class="stat-main" id="stat-days">0</h3>
+                    <p class="stat-trend">⚡ Уровень 1</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-header">Прогресс жизни</p>
+                    <h3 class="stat-main" id="stat-progress">0%</h3>
+                    <p class="stat-trend">↑ 0.000% сегодня</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-header">Средний уровень</p>
+                    <h3 class="stat-main" id="stat-avg">0.0</h3>
+                    <p class="stat-trend">★ Новичок</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-header">Стрик привычек</p>
+                    <h3 class="stat-main" id="stat-streak">0</h3>
+                    <p class="stat-trend">🔥 Разминка</p>
                 </div>
             </section>
 
-            <!-- Dashboard Content Grid -->
-            <div class="content-grid">
-                <!-- Spheres Section -->
-                <section class="dashboard-card card-glass">
-                    <div class="card-header">
-                        <h3>🌀 Сферы</h3>
-                    </div>
-                    <div id="spheres-container" class="spheres-layout">
-                        <!-- Dynamic content -->
-                    </div>
-                </section>
-
-                <!-- Habits Section -->
-                <section class="dashboard-card card-glass">
-                    <div class="card-header">
-                        <h3>✅ Привычки</h3>
-                    </div>
-                    <div id="habits-container" class="habits-list">
-                        <!-- Dynamic content -->
-                    </div>
-                </section>
-
-                <!-- Analysis Section -->
-                <section class="dashboard-card card-glass">
-                    <div class="card-header">
-                        <h3>📊 Анализ</h3>
-                    </div>
-                    <div id="analysis-container" class="analysis-view">
-                        <div id="chart-radar" class="chart-glass"></div>
-                        <div class="analysis-stats">
-                            <div class="analysis-stat">
-                                <span class="label">Средний уровень:</span>
-                                <span id="avg-level" class="value">0%</span>
-                            </div>
+            <div class="content-layout">
+                <div class="main-column">
+                    <section class="card">
+                        <div class="card-title">
+                            <h3>🌀 Сферы Жизни</h3>
+                            <span style="font-size:12px; color:var(--text-muted);">Нажми для прокачки</span>
                         </div>
-                    </div>
-                </section>
+                        <div id="dashboard-spheres" class="spheres-grid">
+                            <!-- Dynamic -->
+                        </div>
+                    </section>
+                </div>
+
+                <div class="side-column">
+                    <section class="card">
+                        <div class="card-title">
+                            <h3>✅ Привычки</h3>
+                        </div>
+                        <div id="dashboard-habits" class="habit-list">
+                            <!-- Dynamic -->
+                        </div>
+                    </section>
+                </div>
             </div>
         </main>
     </div>
