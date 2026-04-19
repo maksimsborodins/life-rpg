@@ -1,43 +1,47 @@
-const SPHERES = [
-  { id: 'health',    name: '💪 Здоровье',    color: '#4ade80' },
-  { id: 'trading',   name: '📈 Трейдинг',    color: '#facc15' },
-  { id: 'work',      name: '💼 Работа',      color: '#60a5fa' },
-  { id: 'money',     name: '💰 Деньги',      color: '#fbbf24' },
-  { id: 'discipline',name: '🔥 Дисциплина',  color: '#f87171' },
-  { id: 'looks',     name: '🪞 Внешность',   color: '#e879f9' },
-  { id: 'relations', name: '❤️ Отношения',  color: '#fb7185' },
-  { id: 'growth',    name: '📚 Развитие',    color: '#34d399' },
+const DEFAULT_SPHERES = [
+  { id: 'trading',  name: '📈 Трейдинг',        color: '#facc15' },
+  { id: 'health',   name: '💪 Здоровье',        color: '#4ade80' },
+  { id: 'creative', name: '🎨 Творчество',      color: '#f472b6' },
+  { id: 'hobby',    name: '🎮 Хобби',          color: '#60a5fa' },
+  { id: 'looks',    name: '🪞 Внешний вид',     color: '#e879f9' },
+  { id: 'family',   name: '👨‍👩‍👧 Семья',         color: '#fb7185' },
+  { id: 'social',   name: '🤝 Знакомства',     color: '#34d399' },
+  { id: 'inner',    name: '🧘 Внутренний порядок', color: '#a78bfa' },
 ];
 
 const START_YEAR = 2026;
 const YEARS = 30;
 const DAYS_PER_YEAR = 365;
-const TOTAL_DAYS = YEARS * DAYS_PER_YEAR; // 10950
+const TOTAL_DAYS = YEARS * DAYS_PER_YEAR;
 
-const SEED_DAYS = ["2026-01-01","2026-01-02","2026-01-03","2026-01-04","2026-01-05","2026-01-06","2026-01-07","2026-01-08","2026-01-09","2026-01-10","2026-01-11","2026-01-12","2026-01-13","2026-01-14","2026-01-15","2026-01-16","2026-01-17","2026-01-18","2026-01-19","2026-01-20","2026-01-21","2026-01-22","2026-01-23","2026-01-24","2026-01-25","2026-01-26","2026-01-27","2026-01-28","2026-01-29","2026-01-30","2026-01-31","2026-02-01","2026-02-02","2026-02-03","2026-02-04","2026-02-05","2026-02-06","2026-02-07","2026-02-08","2026-02-09","2026-02-10","2026-02-11","2026-02-12","2026-02-13","2026-02-14","2026-02-15","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-21","2026-02-22","2026-02-23","2026-02-24","2026-02-25","2026-02-26","2026-02-27","2026-02-28","2026-03-01","2026-03-02","2026-03-03","2026-03-04","2026-03-05","2026-03-06","2026-03-07","2026-03-08","2026-03-09","2026-03-10","2026-03-11","2026-03-12","2026-03-13","2026-03-14","2026-03-15","2026-03-16","2026-03-17","2026-03-18","2026-03-19","2026-03-20","2026-03-21","2026-03-22","2026-03-23","2026-03-24","2026-03-25","2026-03-26","2026-03-27","2026-03-28","2026-03-29","2026-03-30","2026-03-31","2026-04-01","2026-04-02","2026-04-03","2026-04-04","2026-04-05","2026-04-06","2026-04-07","2026-04-08","2026-04-09","2026-04-10","2026-04-11","2026-04-12","2026-04-13","2026-04-14","2026-04-15","2026-04-16","2026-04-17"];
+const SEED_DAYS = ["2026-01-01","2026-01-02","2026-01-03","2026-01-04","2026-01-05","2026-01-06","2026-01-07","2026-01-08","2026-01-09","2026-01-10","2026-01-11","2026-01-12","2026-01-13","2026-01-14","2026-01-15","2026-01-16","2026-01-17","2026-01-18","2026-01-19","2026-01-20","2026-01-21","2026-01-22","2026-01-23","2026-01-24","2026-01-25","2026-01-26","2026-01-27","2026-01-28","2026-01-29","2026-01-30","2026-01-31","2026-02-01","2026-02-02","2026-02-03","2026-02-04","2026-02-05","2026-02-06","2026-02-07","2026-02-08","2026-02-09","2026-02-10","2026-02-11","2026-02-12","2026-02-13","2026-02-14","2026-02-15","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-21","2026-02-22","2026-02-23","2026-02-24","2026-02-25","2026-02-26","2026-02-27","2026-02-28","2026-03-01","2026-03-02","2026-03-03","2026-03-04","2026-03-05","2026-03-06","2026-03-07","2026-03-08","2026-03-09","2026-03-10","2026-03-11","2026-03-12","2026-03-13","2026-03-14","2026-03-15","2026-03-16","2026-03-17","2026-03-18","2026-03-19","2026-03-20","2026-03-21","2026-03-22","2026-03-23","2026-03-24","2026-03-25","2026-03-26","2026-03-27","2026-03-28","2026-03-29","2026-03-30","2026-03-31","2026-04-01","2026-04-02","2026-04-03","2026-04-04","2026-04-05","2026-04-06","2026-04-07","2026-04-08","2026-04-09","2026-04-10","2026-04-11","2026-04-12","2026-04-13","2026-04-14","2026-04-15","2026-04-16","2026-04-17","2026-04-18","2026-04-19"];
 
-function loadData() {
-  return JSON.parse(localStorage.getItem('lifeRPG') || '{}');
+function loadData() { return JSON.parse(localStorage.getItem('lifeRPG') || '{}'); }
+function saveData(d) { localStorage.setItem('lifeRPG', JSON.stringify(d)); }
+function getTodayStr() { return new Date().toISOString().slice(0, 10); }
+
+function getSpheres() {
+  const d = loadData();
+  return d.spheres || DEFAULT_SPHERES;
 }
-function saveData(data) {
-  localStorage.setItem('lifeRPG', JSON.stringify(data));
-}
+
 function getScores() { return loadData().scores || {}; }
 function getDoneDays() { return loadData().doneDays || []; }
-function getTodayStr() { return new Date().toISOString().slice(0, 10); }
 
 // --- SEED ---
 function seedDays() {
-  const data = loadData();
-  if (!data.seeded) {
-    data.doneDays = [...SEED_DAYS];
-    data.seeded = true;
-    saveData(data);
+  const d = loadData();
+  if (!d.seeded) {
+    d.doneDays = [...SEED_DAYS];
+    d.seeded = true;
+    // записываем сферы по умолчанию
+    d.spheres = DEFAULT_SPHERES;
+    saveData(d);
   }
 }
 
 // --- NAV ---
-document.querySelectorAll('.nav-btn').forEach(btn => {
+document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -48,12 +52,74 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
+// --- SETTINGS ---
+const overlay = document.getElementById('settings-overlay');
+
+document.getElementById('open-settings').addEventListener('click', () => {
+  renderSettingsSpheres();
+  overlay.classList.remove('hidden');
+});
+
+document.getElementById('settings-close').addEventListener('click', () => {
+  overlay.classList.add('hidden');
+});
+
+overlay.addEventListener('click', (e) => {
+  if (e.target === overlay) overlay.classList.add('hidden');
+});
+
+function renderSettingsSpheres() {
+  const spheres = getSpheres();
+  const container = document.getElementById('settings-spheres-list');
+  container.innerHTML = '';
+  spheres.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'settings-sphere-row';
+    row.innerHTML = `
+      <input class="settings-emoji" type="text" maxlength="4" value="${s.name.split(' ')[0]}" data-i="${i}" placeholder="💫">
+      <input class="settings-name" type="text" value="${s.name.split(' ').slice(1).join(' ')}" data-i="${i}" placeholder="Название">
+      <input class="settings-color" type="color" value="${s.color}" data-i="${i}">
+    `;
+    container.appendChild(row);
+  });
+}
+
+document.getElementById('settings-save').addEventListener('click', () => {
+  const d = loadData();
+  const emojis = document.querySelectorAll('.settings-emoji');
+  const names = document.querySelectorAll('.settings-name');
+  const colors = document.querySelectorAll('.settings-color');
+  const spheres = getSpheres();
+
+  spheres.forEach((s, i) => {
+    s.name = (emojis[i].value.trim() || '⭐') + ' ' + (names[i].value.trim() || s.name);
+    s.color = colors[i].value;
+  });
+
+  d.spheres = spheres;
+  saveData(d);
+  overlay.classList.add('hidden');
+  renderSpheres();
+
+  const btn = document.getElementById('settings-save');
+  btn.textContent = '✅ Сохранено!';
+  setTimeout(() => btn.textContent = '💾 Сохранить сферы', 1500);
+});
+
+document.getElementById('settings-reset').addEventListener('click', () => {
+  if (confirm('Точно? Все данные, включая дни, будут удалены.')) {
+    localStorage.removeItem('lifeRPG');
+    location.reload();
+  }
+});
+
 // --- SPHERES ---
 function renderSpheres() {
+  const spheres = getSpheres();
   const scores = getScores();
   const container = document.getElementById('spheres-list');
   container.innerHTML = '';
-  SPHERES.forEach(s => {
+  spheres.forEach(s => {
     const val = scores[s.id] ?? 5;
     const div = document.createElement('div');
     div.className = 'sphere-item';
@@ -74,12 +140,12 @@ function renderSpheres() {
 }
 
 document.getElementById('save-spheres').addEventListener('click', () => {
-  const data = loadData();
-  data.scores = {};
+  const d = loadData();
+  d.scores = d.scores || {};
   document.querySelectorAll('.sphere-slider').forEach(slider => {
-    data.scores[slider.dataset.id] = parseInt(slider.value);
+    d.scores[slider.dataset.id] = parseInt(slider.value);
   });
-  saveData(data);
+  saveData(d);
   const btn = document.getElementById('save-spheres');
   btn.textContent = '✅ Сохранено!';
   setTimeout(() => btn.textContent = '💾 Сохранить', 1500);
@@ -89,10 +155,11 @@ document.getElementById('save-spheres').addEventListener('click', () => {
 function drawWheel() {
   const canvas = document.getElementById('wheel-canvas');
   const ctx = canvas.getContext('2d');
+  const spheres = getSpheres();
   const scores = getScores();
   const cx = canvas.width / 2, cy = canvas.height / 2;
   const R = cx - 28;
-  const n = SPHERES.length;
+  const n = spheres.length;
   const step = (Math.PI * 2) / n;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -120,7 +187,7 @@ function drawWheel() {
   }
 
   ctx.beginPath();
-  SPHERES.forEach((s, j) => {
+  spheres.forEach((s, j) => {
     const val = scores[s.id] ?? 5;
     const angle = step * j - Math.PI / 2;
     const r = (R * val) / 10;
@@ -132,7 +199,7 @@ function drawWheel() {
   ctx.fill();
   ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.stroke();
 
-  SPHERES.forEach((s, j) => {
+  spheres.forEach((s, j) => {
     const angle = step * j - Math.PI / 2;
     const r = R + 20;
     const x = cx + r * Math.cos(angle), y = cy + r * Math.sin(angle);
@@ -192,12 +259,12 @@ function renderDays() {
 }
 
 document.getElementById('close-day-btn').addEventListener('click', () => {
-  const data = loadData();
+  const d = loadData();
   const today = getTodayStr();
-  if (!data.doneDays) data.doneDays = [];
-  if (!data.doneDays.includes(today)) {
-    data.doneDays.push(today);
-    saveData(data);
+  if (!d.doneDays) d.doneDays = [];
+  if (!d.doneDays.includes(today)) {
+    d.doneDays.push(today);
+    saveData(d);
     renderDays();
   }
 });
