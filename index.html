@@ -8,29 +8,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- App Container -->
     <div class="app-wrapper">
-        <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="logo-container">
                 <h1 class="logo">LIFE RPG</h1>
             </div>
             
             <nav class="nav-links">
-                <li class="nav-item active" data-page="dashboard">📊 Dashboard</li>
-                <li class="nav-item" data-page="analytics">📈 Аналитика</li>
-                <li class="nav-item" data-page="quests">🛡️ Квесты</li>
-                <li class="nav-item" data-page="achievements">🏆 Достижения</li>
+                <li class="nav-item active" data-page="dashboard">Dashboard</li>
+                <li class="nav-item" data-page="analytics">Аналитика</li>
+                <li class="nav-item" data-page="quests">Квесты</li>
+                <li class="nav-item" data-page="achievements">Достижения</li>
             </nav>
 
             <div class="sidebar-footer">
-                <li id="open-settings" class="nav-item">⚙️ Настройки</li>
+                <li id="open-settings" class="nav-item">Настройки</li>
             </div>
         </aside>
 
-        <!-- Main Dashboard View -->
         <main id="main-content" class="dashboard-container">
-            <!-- Header -->
             <header class="header-row">
                 <div class="greeting">
                     <h2 id="greeting-text">Добрый день, Максим</h2>
@@ -39,7 +35,6 @@
                 <button id="start-day-action" class="btn-hero">Начать новый день</button>
             </header>
 
-            <!-- Page: Dashboard (Default) -->
             <div id="page-dashboard" class="page-content">
                 <section class="stats-grid">
                     <div class="stat-card">
@@ -68,50 +63,40 @@
                     <div class="main-column">
                         <section class="card">
                             <div class="card-title">
-                                <h3>🌀 Сферы Жизни</h3>
+                                <h3>Сферы Жизни</h3>
                             </div>
-                            <div id="dashboard-spheres" class="spheres-grid">
-                                <!-- Dynamic -->
-                            </div>
+                            <div id="dashboard-spheres" class="spheres-grid"></div>
                         </section>
                     </div>
-
                     <div class="side-column">
                         <section class="card">
                             <div class="card-title">
-                                <h3>✅ Привычки</h3>
+                                <h3>Привычки</h3>
                             </div>
-                            <div id="dashboard-habits" class="habit-list">
-                                <!-- Dynamic -->
-                            </div>
-                        </section>
-
-                        <!-- Balance Wheel under Habits (Smaller) -->
-                        <section class="card">
-                            <div class="card-title">
-                                <h3>🎡 Баланс</h3>
-                            </div>
-                            <div style="display:flex; justify-content:center;">
-                                <canvas id="balance-wheel-canvas" width="280" height="280" style="max-width:100%;"></canvas>
-                            </div>
+                            <div id="dashboard-habits" class="habit-list"></div>
                         </section>
                     </div>
                 </div>
             </div>
 
-            <!-- Page: Analytics -->
             <div id="page-analytics" class="page-content hidden">
                 <div class="content-layout">
-                    <section class="card" style="grid-column: span 2;">
-                        <div class="card-title"><h3>📈 Глубокая аналитика</h3></div>
-                        <div class="analytics-placeholder" style="padding:48px; text-align:center; color:var(--text-muted);">
-                            <p>Здесь будет анализ твоей эффективности по дням недели, <br>корреляция привычек с ростом сфер и прогнозы развития.</p>
+                    <section class="card" style="grid-column: span 1;">
+                        <div class="card-title"><h3>Колесо Баланса</h3></div>
+                        <div style="display:flex; justify-content:center; padding: 24px;">
+                            <canvas id="balance-wheel-canvas" width="400" height="400" style="max-width:100%;"></canvas>
+                        </div>
+                    </section>
+                    <section class="card" style="grid-column: span 1;">
+                        <div class="card-title"><h3>Анализ эффективности</h3></div>
+                        <div class="analytics-placeholder" style="padding:24px; color:var(--text-muted);">
+                            <p>Твой баланс смещен в сторону <b>Трейдинга</b>.</p>
+                            <p style="margin-top:12px;">Рекомендация: Удели внимание сфере <b>Хобби</b> для выравнивания колеса.</p>
                         </div>
                     </section>
                 </div>
             </div>
 
-            <!-- Page: Quests -->
             <div id="page-quests" class="page-content hidden">
                 <div class="quests-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:24px;">
                     <div class="card quest-card">
@@ -129,7 +114,6 @@
                 </div>
             </div>
 
-            <!-- Page: Achievements -->
             <div id="page-achievements" class="page-content hidden">
                 <div class="achievements-grid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px;">
                     <div class="card ach-card locked">
@@ -147,25 +131,22 @@
         </main>
     </div>
 
-    <!-- Settings Modal -->
     <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
             <div class="card-title">
-                <h3>⚙️ Настройки</h3>
-                <button id="close-settings">✕</button>
+                <h3>Настройки</h3>
+                <button id="close-settings" style="background:none; border:none; color:white; cursor:pointer; font-size:20px;">✕</button>
             </div>
-            <!-- Settings fields same as before, simplified structure in HTML -->
             <div id="settings-spheres" style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;"></div>
-            <button id="save-spheres" class="btn-hero">💾 Сохранить сферы</button>
+            <button id="save-spheres" class="btn-hero">Сохранить сферы</button>
             <hr style="margin:24px 0; border:var(--border);">
             <div id="settings-habits" style="margin-bottom:16px;"></div>
             <div style="display:flex; gap:8px;">
-                <input id="new-habit-name" type="text" placeholder="Привычка">
-                <button id="add-habit" class="btn-hero">➕</button>
+                <input id="new-habit-name" type="text" placeholder="Новая привычка" style="flex-grow:1; background:var(--bg-main); border:1px solid var(--border); color:white; padding:12px; border-radius:12px;">
+                <button id="add-habit" class="btn-hero">Добавить</button>
             </div>
         </div>
     </div>
-
     <script src="app.js"></script>
 </body>
 </html>
