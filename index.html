@@ -1,104 +1,105 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Life RPG">
-  <link rel="manifest" href="manifest.json">
-  <title>Life RPG</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <title>Life RPG</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div id="settings-overlay" class="settings-overlay hidden">
-    <div class="settings-panel">
-      <div class="settings-header">
-        <h3>⚙️ Настройки</h3>
-        <button id="settings-close" class="settings-close">✕</button>
-      </div>
+    <div id="settings-overlay" class="settings-overlay hidden">
+        <div class="settings-panel">
+            <div class="settings-header">
+                <h3>⚙️ Настройки</h3>
+                <button id="settings-close" class="settings-close">✕</button>
+            </div>
 
-      <div class="settings-section-title">Сферы</div>
-      <p class="settings-hint">Баллы пересматривай раз в месяц после анализа.</p>
-      <div id="settings-spheres-list"></div>
-      <button id="settings-save" class="btn-primary">💾 Сохранить сферы</button>
+            <div class="settings-section">
+                <div class="section-title">Сферы</div>
+                <div id="settings-spheres-list" class="settings-input-group"></div>
+                <button id="settings-save" class="btn-primary" style="margin-top: 16px;">💾 Сохранить сферы</button>
+            </div>
 
-      <div class="settings-divider"></div>
+            <div class="settings-section">
+                <div class="section-title">Привычки</div>
+                <div id="settings-habits-list" class="settings-input-group"></div>
+                <div class="settings-habit-form">
+                    <input id="new-habit-input" class="settings-name" type="text" placeholder="Название привычки" maxlength="40">
+                    <textarea id="new-habit-purpose" class="settings-purpose" placeholder="Смысл / цель / зачем ты это делаешь" maxlength="140"></textarea>
+                    <button id="add-habit-btn" class="btn-secondary">➕ Добавить привычку</button>
+                </div>
+                <button id="settings-habits-save" class="btn-primary" style="margin-top: 16px;">💾 Сохранить привычки</button>
+            </div>
 
-      <div class="settings-section-title">Привычки</div>
-      <p class="settings-hint">Добавь привычку, её смысл и зачем ты это делаешь.</p>
-      <div id="settings-habits-list"></div>
-      <div class="settings-habit-form">
-        <input id="new-habit-input" class="settings-name" type="text" placeholder="Название привычки" maxlength="40">
-        <textarea id="new-habit-purpose" class="settings-purpose" placeholder="Смысл / цель / зачем я это делаю" maxlength="140"></textarea>
-        <button id="add-habit-btn" class="btn-primary">➕ Добавить привычку</button>
-      </div>
-      <button id="settings-habits-save" class="btn-primary">💾 Сохранить привычки</button>
+            <div class="settings-section">
+                <div class="section-title">Резервная копия</div>
+                <div class="backup-actions">
+                    <button id="export-data-btn" class="btn-secondary">📤 Экспортировать данные</button>
+                    <label class="btn-secondary" style="display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                        📥 Импортировать данные
+                        <input id="import-data-input" type="file" accept="application/json" style="display: none;">
+                    </label>
+                </div>
+            </div>
 
-      <div class="settings-divider"></div>
-
-      <div class="settings-section-title">Резервная копия</div>
-      <p class="settings-hint">Экспортируй JSON для переноса между телефоном и ПК или восстановления после очистки браузера.</p>
-      <div class="backup-actions">
-        <button id="export-data-btn" class="btn-primary">📤 Экспортировать данные</button>
-        <label class="btn-secondary file-import-label">
-          📥 Импортировать данные
-          <input id="import-data-input" type="file" accept="application/json">
-        </label>
-      </div>
-
-      <div class="settings-divider"></div>
-      <div class="settings-section-title">Опасная зона</div>
-      <button id="settings-reset" class="btn-danger">🗑️ Сбросить все данные</button>
+            <div class="settings-section">
+                <div class="section-title">Опасная зона</div>
+                <button id="settings-reset" class="btn-secondary" style="color: #f87171; border-color: #452222;">🗑️ Сбросить все данные</button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <nav class="nav">
-    <button class="nav-btn" data-tab="spheres">🌀 Сферы</button>
-    <button class="nav-btn" data-tab="habits">✅ Привычки</button>
-    <button class="nav-btn active" data-tab="days">⏳ Остаток</button>
-    <button class="nav-btn" id="open-settings">⚙️</button>
-  </nav>
+    <nav class="nav">
+        <button class="nav-btn" data-tab="spheres"><span>🌀</span><span>Сферы</span></button>
+        <button class="nav-btn" data-tab="habits"><span>✅</span><span>Привычки</span></button>
+        <button class="nav-btn" data-tab="days"><span>⏳</span><span>Остаток</span></button>
+        <button id="open-settings" class="nav-btn"><span>⚙️</span><span>Настройки</span></button>
+    </nav>
 
-  <div id="tab-spheres" class="tab">
-    <h2>🌀 Сферы</h2>
-    <p class="spheres-hint">Нажми на сферу, если сегодня улучшил её.</p>
-    <div id="spheres-list"></div>
-    <div class="wheel-section">
-      <div class="wheel-title">Колесо баланса</div>
-      <canvas id="wheel-canvas" width="300" height="300"></canvas>
-    </div>
-  </div>
+    <main>
+        <div id="spheres" class="tab active" data-tab="spheres">
+            <h2>🌀 Сферы</h2>
+            <div id="spheres-list"></div>
+            <div class="wheel-section">
+                <div class="section-title">Колесо баланса</div>
+                <canvas id="wheel-canvas"></canvas>
+            </div>
+        </div>
 
-  <div id="tab-habits" class="tab">
-    <h2>✅ Привычки</h2>
-    <p class="spheres-hint">Отмечай выполненные привычки за сегодня.</p>
-    <div id="habits-list"></div>
-    <div id="habits-empty" class="habits-empty hidden">Привычки не добавлены.<br>Открой ⚙️ настройки, чтобы добавить.</div>
-  </div>
+        <div id="habits" class="tab" data-tab="habits">
+            <h2>✅ Привычки</h2>
+            <div id="habits-container"></div>
+        </div>
 
-  <div id="tab-days" class="tab active">
-    <h2>⏳ Остаток</h2>
-    <div class="days-hero">
-      <div class="days-hero-title">Твоё время ограничено</div>
-      <div class="days-hero-subtitle">Каждый день либо прожит осознанно, либо исчезает сам.</div>
-    </div>
-    <div class="days-meta">
-      <div class="days-meta-left"><strong id="days-done">0</strong> <span id="days-total-label">/ 10 950 дней</span></div>
-      <div class="days-meta-right" id="days-pct-label">0%</div>
-    </div>
-    <div class="days-progress-bar"><div id="days-progress-fill"></div></div>
-    <div id="day-ritual" class="day-ritual">
-      <div class="ritual-label" id="ritual-label">Удерживай, чтобы начать сегодняшний день</div>
-      <button id="start-day-hold" class="start-day-hold">
-        <span class="start-day-fill" id="start-day-fill"></span>
-        <span class="start-day-text" id="start-day-text">Удерживай 3 секунды</span>
-      </button>
-    </div>
-    <div id="years-grid"></div>
-  </div>
+        <div id="days" class="tab" data-tab="days">
+            <h2>⏳ Остаток</h2>
+            
+            <div class="days-hero">
+                <div class="days-hero-title">Твоё время ограничено</div>
+                <div class="days-hero-subtitle">Каждый день либо прожит осознанно, либо исчезает сам.</div>
+            </div>
 
-  <script src="app.js"></script>
+            <div class="days-meta">
+                <div class="days-meta-left"><span id="days-count">0</span> / 10 950 дней</div>
+                <div class="days-meta-right"><span id="days-percent">0</span>% пройдено</div>
+            </div>
+
+            <div id="ritual-container" class="day-ritual">
+                <div class="start-day-hold" id="start-day-hold">
+                    <div class="start-day-fill" id="start-day-fill"></div>
+                    <div class="start-day-text" id="start-day-text">Удерживай, чтобы начать день</div>
+                </div>
+            </div>
+
+            <div class="section-title">30 лет вперёд</div>
+            <div id="years-grid"></div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
 </body>
 </html>
