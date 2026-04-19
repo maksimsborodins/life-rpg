@@ -34,13 +34,14 @@ function loadData() {
 function saveData() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     updateUI();
+    drawWheel();
 }
 
 function getTodayStr() {
     return new Date().toLocaleDateString('en-CA');
 }
 
-/* UI Elements Mapping */
+/* UI Elements */
 const ui = {
     statDays: document.getElementById('stat-days'),
     statProgress: document.getElementById('stat-progress'),
@@ -51,12 +52,14 @@ const ui = {
     settingsModal: document.getElementById('settings-modal'),
     settingsSpheres: document.getElementById('settings-spheres'),
     settingsHabits: document.getElementById('settings-habits'),
-    currentDate: document.getElementById('current-date')
+    currentDate: document.getElementById('current-date'),
+    wheelCanvas: document.getElementById('balance-wheel-canvas')
 };
 
 function init() {
     setupDate();
     updateUI();
+    drawWheel();
     setupEventListeners();
 }
 
@@ -66,7 +69,6 @@ function setupDate() {
 }
 
 function updateUI() {
-    // Stats
     const days = data.openedDays.length;
     ui.statDays.innerText = days.toLocaleString();
     ui.statProgress.innerText = ((days / TOTAL_DAYS) * 100).toFixed(4) + '%';
@@ -74,7 +76,6 @@ function updateUI() {
     const avg = data.spheres.reduce((acc, s) => acc + (s.score || 0), 0) / data.spheres.length;
     ui.statAvg.innerText = avg.toFixed(1);
 
-    // Calc Streak
     let streak = 0;
     const habitIds = data.habits.map(h => h.id);
     if (habitIds.length > 0) {
@@ -83,7 +84,7 @@ function updateUI() {
             const dStr = curr.toLocaleDateString('en-CA');
             const doneAtDate = data.habitHistory[dStr] || [];
             const allDone = habitIds.every(id => doneAtDate.includes(id));
-            if (allDone && habitIds.length > 0) {
+            if (allDone) {
                 streak++;
                 curr.setDate(curr.getDate() - 1);
             } else {
@@ -98,6 +99,77 @@ function updateUI() {
     renderHabits();
 }
 
+function drawWheel() {
+    const canvas = ui.wheelCanvas;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(centerX, centerY) - 40;
+
+    ctx.clearRect(0, 0, width, height);
+
+    // Draw Grid (Circles 1-10)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i <= 10; i++) {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, (radius / 10) * i, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    const spheres = data.spheres;
+    const angleStep = (Math.PI * 2) / spheres.length;
+
+    // Draw Spokes
+    ctx.beginPath();
+    for (let i = 0; i < spheres.length; i++) {
+        const angle = i * angleStep - Math.PI / 2;
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX + Math.cos(angle) * radius, centerY + Math.sin(angle) * radius);
+    }
+    ctx.stroke();
+
+    // Draw Web (Shape)
+    ctx.beginPath();
+    spheres.forEach((s, i) => {
+        const angle = i * angleStep - Math.PI / 2;
+        const dist = (radius / 10) * (s.score || 0);
+        const x = centerX + Math.cos(angle) * dist;
+        const y = centerY + Math.sin(angle) * dist;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(192, 132, 252, 0.3)';
+    ctx.fill();
+    ctx.strokeStyle = '#c084fc';
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Draw Labels & Dots
+    spheres.forEach((s, i) => {
+        const angle = i * angleStep - Math.PI / 2;
+        const dist = (radius / 10) * (s.score || 0);
+        
+        // Dot
+        ctx.beginPath();
+        ctx.arc(centerX + Math.cos(angle) * dist, centerY + Math.sin(angle) * dist, 4, 0, Math.PI * 2);
+        ctx.fillStyle = s.color;
+        ctx.fill();
+
+        // Label
+        const labelDist = radius + 25;
+        ctx.fillStyle = 'white';
+        ctx.font = '500 12px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText(s.name.split(' ')[0], centerX + Math.cos(angle) * labelDist, centerY + Math.sin(angle) * labelDist);
+    });
+}
+
 function renderSpheres() {
     ui.spheresGrid.innerHTML = '';
     const today = getTodayStr();
@@ -106,7 +178,7 @@ function renderSpheres() {
     data.spheres.forEach(s => {
         const isActive = improved.includes(s.id);
         const card = document.createElement('div');
-        card.className = `sphere-item`;
+        card.className = `sphere-item ${isActive ? 'active' : ''}`;
         if (isActive) card.style.borderColor = s.color;
         
         card.innerHTML = `
@@ -114,7 +186,6 @@ function renderSpheres() {
             <div class="level-track">
                 <div class="level-fill" style="width: ${(s.score || 0) * 10}%; background: ${s.color}"></div>
             </div>
-            <span style="font-size:10px; color:var(--text-muted); margin-top:4px; display:block;">Уровень ${s.score || 0}</span>
         `;
         card.onclick = () => toggleSphere(s.id);
         ui.spheresGrid.appendChild(card);
@@ -134,11 +205,6 @@ function renderHabits() {
     ui.habitsList.innerHTML = '';
     const today = getTodayStr();
     const done = data.habitHistory[today] || [];
-
-    if (data.habits.length === 0) {
-        ui.habitsList.innerHTML = '<p style="color:var(--text-muted); font-size:14px;">Нет активных привычек</p>';
-        return;
-    }
 
     data.habits.forEach(h => {
         const isDone = done.includes(h.id);
@@ -166,20 +232,16 @@ function toggleHabit(id) {
 }
 
 function setupEventListeners() {
-    document.getElementById('open-settings').onclick = () => {
-        renderSettings();
-        ui.settingsModal.classList.remove('hidden');
-    };
+    document.getElementById('open-settings').onclick = () => { renderSettings(); ui.settingsModal.classList.remove('hidden'); };
     document.getElementById('close-settings').onclick = () => ui.settingsModal.classList.add('hidden');
+    document.getElementById('refresh-wheel').onclick = () => drawWheel();
     
     document.getElementById('start-day-action').onclick = () => {
         const today = getTodayStr();
         if (!data.openedDays.includes(today)) {
             data.openedDays.push(today);
             saveData();
-            alert('Новый день начат! Удачи, Игрок.');
-        } else {
-            alert('День уже был начат ранее.');
+            alert('День начат! Вперед к целям.');
         }
     };
 
@@ -192,16 +254,14 @@ function setupEventListeners() {
             data.spheres[idx].color = row.querySelector('.e-color').value;
         });
         saveData();
-        alert('Сферы обновлены');
+        alert('Обновлено!');
     };
 
     document.getElementById('add-habit').onclick = () => {
-        const name = document.getElementById('new-habit-name').value.trim();
-        const desc = document.getElementById('new-habit-desc').value.trim();
-        if (!name) return;
-        data.habits.push({ id: 'h_' + Date.now(), name, purpose: desc });
-        document.getElementById('new-habit-name').value = '';
-        document.getElementById('new-habit-desc').value = '';
+        const n = document.getElementById('new-habit-name').value.trim();
+        const d = document.getElementById('new-habit-desc').value.trim();
+        if (!n) return;
+        data.habits.push({ id: 'h_' + Date.now(), name: n, purpose: d });
         saveData();
         renderSettings();
     };
@@ -210,7 +270,7 @@ function setupEventListeners() {
         const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `life_rpg_backup_${getTodayStr()}.json`;
+        a.download = `life_rpg_backup.json`;
         a.click();
     };
 
@@ -218,22 +278,19 @@ function setupEventListeners() {
     document.getElementById('import-file').onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
+        const r = new FileReader();
+        r.onload = (ev) => {
             try {
                 data = JSON.parse(ev.target.result);
                 saveData();
                 location.reload();
-            } catch { alert('Ошибка формата файла'); }
+            } catch { alert('Ошибка!'); }
         };
-        reader.readAsText(file);
+        r.readAsText(file);
     };
 
     document.getElementById('danger-reset').onclick = () => {
-        if (confirm('ВНИМАНИЕ: Все данные будут удалены безвозвратно. Продолжить?')) {
-            localStorage.removeItem(STORAGE_KEY);
-            location.reload();
-        }
+        if (confirm('Сбросить всё?')) { localStorage.removeItem(STORAGE_KEY); location.reload(); }
     };
 }
 
@@ -243,34 +300,20 @@ function renderSettings() {
         const row = document.createElement('div');
         row.className = 's-edit-row';
         row.dataset.idx = i;
-        row.style = 'display:grid; grid-template-columns:1fr 80px 50px; gap:var(--p8); align-items:center;';
-        row.innerHTML = `
-            <input type="text" class="e-name" value="${s.name}" style="background:var(--bg-main); border:1px solid var(--border); padding:var(--p8); color:white; border-radius:var(--p8);">
-            <input type="number" class="e-score" value="${s.score || 0}" min="0" max="10" style="background:var(--bg-main); border:1px solid var(--border); padding:var(--p8); color:white; border-radius:var(--p8);">
-            <input type="color" class="e-color" value="${s.color}" style="width:100%; height:34px; border:none; background:none; cursor:pointer;">
-        `;
+        row.style = 'display:grid; grid-template-columns:1fr 80px 50px; gap:8px; margin-bottom:8px;';
+        row.innerHTML = `<input type="text" class="e-name" value="${s.name}"><input type="number" class="e-score" value="${s.score||0}"><input type="color" class="e-color" value="${s.color}">`;
         ui.settingsSpheres.appendChild(row);
     });
 
     ui.settingsHabits.innerHTML = '';
     data.habits.forEach((h, i) => {
         const item = document.createElement('div');
-        item.style = 'display:flex; justify-content:space-between; align-items:center; padding:var(--p12); background:var(--bg-hover); border-radius:var(--p12); margin-bottom:var(--p8); border:1px solid var(--border);';
-        item.innerHTML = `
-            <div>
-                <p style="font-weight:600; font-size:14px;">${h.name}</p>
-                <p style="font-size:11px; color:var(--text-muted);">${h.purpose || ''}</p>
-            </div>
-            <button onclick="deleteHabit(${i})" style="background:none; border:none; color:#f87171; cursor:pointer; font-size:14px;">🗑️</button>
-        `;
+        item.style = 'display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--bg-hover); border-radius:12px; margin-bottom:8px;';
+        item.innerHTML = `<div><p>${h.name}</p></div><button onclick="deleteHabit(${i})">🗑️</button>`;
         ui.settingsHabits.appendChild(item);
     });
 }
 
-window.deleteHabit = (i) => {
-    data.habits.splice(i, 1);
-    saveData();
-    renderSettings();
-};
+window.deleteHabit = (i) => { data.habits.splice(i, 1); saveData(); renderSettings(); };
 
 init();
