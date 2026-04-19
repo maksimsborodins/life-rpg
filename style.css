@@ -1,4 +1,28 @@
 :root {
+/* Balance Wheel Enhancements */
+#balance-wheel-canvas {
+    filter: drop-shadow(0 0 20px rgba(192, 132, 252, 0.2));
+    transition: transform 0.3s ease;
+}
+#balance-wheel-canvas:hover {
+    transform: scale(1.02);
+}
+
+.card-title button:hover {
+    color: white !important;
+    text-decoration: underline;
+}
+
+@keyframes pulse-border {
+    0% { border-color: var(--border); }
+    50% { border-color: var(--accent); }
+    100% { border-color: var(--border); }
+}
+
+.sphere-item.active {
+    animation: pulse-border 2s infinite;
+}
+
     --p4: 4px; --p8: 8px; --p12: 12px; --p16: 16px; --p24: 24px; --p32: 32px; --p48: 48px;
     --bg-main: #050608;
     --bg-sidebar: #0a0c10;
