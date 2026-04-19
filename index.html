@@ -18,30 +18,51 @@
         <h3>⚙️ Настройки</h3>
         <button id="settings-close" class="settings-close">✕</button>
       </div>
-      <p class="settings-hint">Изменяй названия, цвета и баллы сфер. Баллы лучше пересматривать после анализа месяца.</p>
+
+      <div class="settings-section-title">Сферы</div>
+      <p class="settings-hint">Баллы пересматривай раз в месяц после анализа.</p>
       <div id="settings-spheres-list"></div>
-      <button id="settings-save" class="btn-primary">💾 Сохранить</button>
+      <button id="settings-save" class="btn-primary">💾 Сохранить сферы</button>
+
+      <div class="settings-divider"></div>
+
+      <div class="settings-section-title">Привычки</div>
+      <p class="settings-hint">Добавь привычки — каждый день отмечай выполненные.</p>
+      <div id="settings-habits-list"></div>
+      <div class="settings-habit-add">
+        <input id="new-habit-input" class="settings-name" type="text" placeholder="Новая привычка..." maxlength="40">
+        <button id="add-habit-btn" class="btn-add">+</button>
+      </div>
+      <button id="settings-habits-save" class="btn-primary">💾 Сохранить привычки</button>
+
       <div class="settings-divider"></div>
       <div class="settings-section-title">Опасная зона</div>
-      <button id="reset-day" class="btn-warning">🔄 Сбросить начало дня</button>
-      <button id="settings-reset" class="btn-danger" style="margin-top:10px">🗑️ Сбросить все данные</button>
+      <button id="settings-reset" class="btn-danger">🗑️ Сбросить все данные</button>
     </div>
   </div>
 
   <nav class="nav">
     <button class="nav-btn" data-tab="spheres">🌀 Сферы</button>
+    <button class="nav-btn" data-tab="habits">✅ Привычки</button>
     <button class="nav-btn active" data-tab="days">⏳ Остаток</button>
     <button class="nav-btn" id="open-settings">⚙️</button>
   </nav>
 
   <div id="tab-spheres" class="tab">
     <h2>🌀 Сферы</h2>
-    <p class="spheres-hint">Нажми на сферу, если сегодня улучшил её — это фиксирует прогресс, но не меняет месячный балл.</p>
+    <p class="spheres-hint">Нажми на сферу, если сегодня улучшил её.</p>
     <div id="spheres-list"></div>
     <div class="wheel-section">
       <div class="wheel-title">Колесо баланса</div>
       <canvas id="wheel-canvas" width="300" height="300"></canvas>
     </div>
+  </div>
+
+  <div id="tab-habits" class="tab">
+    <h2>✅ Привычки</h2>
+    <p class="spheres-hint">Отмечай выполненные привычки за сегодня.</p>
+    <div id="habits-list"></div>
+    <div id="habits-empty" class="habits-empty hidden">Привычки не добавлены.<br>Открой ⚙️ настройки, чтобы добавить.</div>
   </div>
 
   <div id="tab-days" class="tab active">
@@ -50,14 +71,11 @@
       <div class="days-hero-title">Твоё время ограничено</div>
       <div class="days-hero-subtitle">Каждый день либо прожит осознанно, либо исчезает сам.</div>
     </div>
-
     <div class="days-meta">
       <div class="days-meta-left"><strong id="days-done">0</strong> <span>/ 10 950 дней</span></div>
       <div class="days-meta-right" id="days-pct-label">0%</div>
     </div>
-
     <div class="days-progress-bar"><div id="days-progress-fill"></div></div>
-
     <div id="day-ritual" class="day-ritual">
       <div class="ritual-label" id="ritual-label">Удерживай, чтобы начать сегодняшний день</div>
       <button id="start-day-hold" class="start-day-hold">
@@ -65,7 +83,6 @@
         <span class="start-day-text" id="start-day-text">Удерживай 3 секунды</span>
       </button>
     </div>
-
     <div id="years-grid"></div>
   </div>
 
