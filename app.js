@@ -34,9 +34,13 @@ function loadData() {
     }
 }
 
-function saveData() {
+function saveData(opts = {}) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    renderAll();
+    if (opts.skipRender) return;
+    renderStats();
+    renderSpheres();
+    renderHabits();
+    if (opts.wheel) drawWheel();
 }
 
 const ui = {
@@ -66,7 +70,7 @@ function init() {
             h.done = false;
         });
         data.lastVisit = today;
-        saveData();
+        saveData({ wheel: false });
     }
     
     setInterval(updateGreeting, 60000);
@@ -139,7 +143,7 @@ function renderHabits() {
             h.done = !h.done;
             if (h.done) h.streak = (h.streak || 0) + 1;
             else h.streak = Math.max(0, (h.streak || 0) - 1);
-            saveData();
+            saveData({ wheel: false });
         };
         ui.dashboardHabits.appendChild(card);
     });
@@ -240,7 +244,7 @@ function setupEventListeners() {
         const today = new Date().toISOString().split('T')[0];
         if (!data.openedDays.includes(today)) {
             data.openedDays.push(today);
-            saveData();
+            saveData({ wheel: false });
             alert('День начат!');
         }
     };
@@ -251,7 +255,7 @@ function setupEventListeners() {
             data.spheres[idx].score = parseInt(row.querySelector('.e-score').value) || 0;
             data.spheres[idx].color = row.querySelector('.e-color').value;
         });
-        saveData();
+        saveData({ wheel: false });
         ui.settingsModal.classList.add('hidden');
     };
     if (addHabitBtn) addHabitBtn.onclick = () => {
@@ -260,7 +264,7 @@ function setupEventListeners() {
         if (!n) return;
         data.habits.push({ id: 'h_' + Date.now(), name: n, done: false, streak: 0 });
         input.value = '';
-        saveData();
+        saveData({ wheel: false });
         renderSettings();
     };
 }
@@ -296,7 +300,7 @@ function renderSettings() {
         row.style = 'display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:12px; padding:12px 16px; margin-bottom:8px;';
         row.innerHTML = `
             <span style="color:white; font-size:14px;">${h.name}</span>
-            <button data-habit-idx="${i}" style="background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3); color:#f87171; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px;">Удалить</button>
+            <button data-habit-idx="${i}" style="background:none; border:none; color:#555; font-size:20px; cursor:pointer; line-height:1; padding:4px 8px; border-radius:6px; transition:color 0.2s;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#555'">−</button>
         `;
         row.querySelector('button').addEventListener('click', () => {
             deleteHabit(i);
@@ -306,9 +310,9 @@ function renderSettings() {
 }
 
 function deleteHabit(index) {
-    if (!confirm(`Удалить привычку "${data.habits[index].name}"?`)) return;
     data.habits.splice(index, 1);
-    saveData();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    renderHabits();
     renderSettings();
 }
 
