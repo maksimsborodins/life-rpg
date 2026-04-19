@@ -32,12 +32,9 @@
                     <h2 id="greeting-text">Добрый день, Максим</h2>
                     <p class="date-text" id="current-date">Понедельник, 20 Апреля</p>
                 </div>
-                <!-- Removed Start Day action as requested -->
             </header>
 
             <div id="page-dashboard" class="page-content">
-                <!-- Old Stats Grid Removed -->
-
                 <div class="content-layout">
                     <div class="main-column">
                         <section class="card">
@@ -68,7 +65,7 @@
                     </section>
                     <section class="card" style="grid-column: span 1;">
                         <div class="card-title"><h3>Анализ эффективности</h3></div>
-                        <div class="analytics-placeholder" style="padding:24px; color:var(--text-muted);">
+                        <div style="padding:24px; color:var(--text-muted);">
                             <p>Твой баланс смещен в сторону <b>Трейдинга</b>.</p>
                             <p style="margin-top:12px;">Рекомендация: Удели внимание сфере <b>Хобби</b> для выравнивания колеса.</p>
                         </div>
@@ -77,7 +74,7 @@
             </div>
 
             <div id="page-quests" class="page-content hidden">
-                <div class="quests-grid" >
+                <div class="quests-grid">
                     <div class="card quest-card">
                         <span class="quest-tag">Здоровье</span>
                         <h4>Марафон гидратации</h4>
@@ -94,7 +91,7 @@
             </div>
 
             <div id="page-achievements" class="page-content hidden">
-                <div class="achievements-grid>
+                <div class="achievements-grid">
                     <div class="card ach-card locked">
                         <div class="ach-icon">🏔️</div>
                         <h4>Вершина</h4>
@@ -112,20 +109,35 @@
 
     <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
-            <div class="card-title">
+            <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
                 <h3>Настройки</h3>
                 <button id="close-settings" style="background:none; border:none; color:white; cursor:pointer; font-size:20px;">✕</button>
             </div>
+
             <div id="settings-spheres" style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;"></div>
             <button id="save-spheres" class="btn-hero">Сохранить сферы</button>
-            <hr style="margin:24px 0; border:var(--border);">
+
+            <hr style="margin:24px 0; border:none; border-top:1px solid var(--border);">
+
             <div id="settings-habits" style="margin-bottom:16px;"></div>
             <div style="display:flex; gap:8px;">
-                <input id="new-habit-name" type="text" placeholder="Новая привычка" style="flex-grow:1; background:var(--bg-main); border:1px solid var(--border); color:white; padding:12px; border-radius:12px;">
+                <input id="new-habit-name" type="text" placeholder="Новая привычка" style="flex-grow:1; background:var(--bg-main); border:1px solid var(--border); color:white; padding:12px; border-radius:12px; font-family:Inter,sans-serif;">
                 <button id="add-habit" class="btn-hero">Добавить</button>
+            </div>
+
+            <hr style="margin:24px 0; border:none; border-top:1px solid var(--border);">
+
+            <p style="color:var(--text-muted); font-size:13px; margin-bottom:12px;">Синхронизация между ПК</p>
+            <div style="display:flex; gap:8px;">
+                <button id="export-btn" class="btn-hero" style="flex:1;">📤 Экспорт</button>
+                <label class="btn-hero" style="flex:1; text-align:center; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                    📥 Импорт
+                    <input id="import-input" type="file" accept=".json" style="display:none;">
+                </label>
             </div>
         </div>
     </div>
+
     <script src="app.js"></script>
 </body>
 </html>
