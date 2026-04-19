@@ -189,10 +189,6 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
 /* Date Text */
 .date-text { font-size: 14px; color: var(--text-muted); margin-top: var(--p4); }
 
-/* Page Content Visibility */
-.page-content { display: none; }
-.page-content.active { display: block; }
-
 /* Quests Page */
 .quests-grid {
   display: grid;
