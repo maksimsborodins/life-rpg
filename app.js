@@ -23,13 +23,11 @@ function loadData() {
         if (!d.spheres || d.spheres.length === 0) d.spheres = JSON.parse(JSON.stringify(DEFAULT_SPHERES));
         if (!d.habits) d.habits = [];
         if (!d.openedDays) d.openedDays = [];
-        
         d.habits = d.habits.map(h => ({
             ...h,
             done: h.done || false,
             streak: h.streak || 0
         }));
-        
         return d;
     } catch {
         return { spheres: JSON.parse(JSON.stringify(DEFAULT_SPHERES)), habits: [], openedDays: [] };
@@ -64,7 +62,7 @@ function init() {
     const today = new Date().toISOString().split('T')[0];
     if (data.lastVisit !== today) {
         data.habits.forEach(h => {
-            if (!h.done) h.streak = 0; // Break streak if not done yesterday
+            if (!h.done) h.streak = 0;
             h.done = false;
         });
         data.lastVisit = today;
@@ -79,9 +77,7 @@ function updateGreeting() {
     let greeting = 'Добрый вечер';
     if (hours >= 5 && hours < 12) greeting = 'Доброе утро';
     else if (hours >= 12 && hours < 18) greeting = 'Добрый день';
-    
     if (ui.greetingText) ui.greetingText.textContent = `${greeting}, Максим`;
-    
     const options = { weekday: 'long', day: 'numeric', month: 'long' };
     if (ui.currentDate) ui.currentDate.textContent = new Date().toLocaleDateString('ru-RU', options);
 }
@@ -98,7 +94,6 @@ function renderStats() {
     const days = data.openedDays.length;
     ui.statsDays.textContent = days;
     ui.statsProgress.textContent = ((days / TOTAL_DAYS) * 100).toFixed(5) + '%';
-    
     const totalScore = data.spheres.reduce((sum, s) => sum + s.score, 0);
     const avg = (totalScore / data.spheres.length).toFixed(1);
     ui.statsAvg.textContent = avg;
@@ -112,13 +107,12 @@ function renderSpheres() {
         const item = document.createElement('div');
         item.className = 'sphere-item';
         item.innerHTML = `
-            <span class="sphere-name">${s.name}</span>
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:16px;">
+                <span class="sphere-name" style="margin-bottom:0;">${s.name}</span>
+                <span style="font-size:32px; font-weight:800; color:var(--text-main); line-height:1;">${s.score}</span>
+            </div>
             <div class="level-track">
                 <div class="level-fill" style="width: ${s.score * 10}%; background: ${s.color}"></div>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-top:12px; font-size:12px; color:var(--text-muted); font-weight:600;">
-                <span>УРОВЕНЬ ${s.score}</span>
-                <span>МАКС. 10</span>
             </div>
         `;
         ui.dashboardSpheres.appendChild(item);
@@ -142,12 +136,10 @@ function renderHabits() {
             </div>
         `;
         card.onclick = (e) => {
-            if (e.target.closest('.checkbox') || !h.done) {
-                h.done = !h.done;
-                if (h.done) h.streak = (h.streak || 0) + 1;
-                else h.streak = Math.max(0, (h.streak || 0) - 1);
-                saveData();
-            }
+            h.done = !h.done;
+            if (h.done) h.streak = (h.streak || 0) + 1;
+            else h.streak = Math.max(0, (h.streak || 0) - 1);
+            saveData();
         };
         ui.dashboardHabits.appendChild(card);
     });
@@ -164,9 +156,7 @@ function drawWheel() {
     const radius = 130;
     const slices = data.spheres.length;
     const sliceAngle = (Math.PI * 2) / slices;
-
     ctx.clearRect(0, 0, size, size);
-
     ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.lineWidth = 1;
     for (let i = 1; i <= 10; i++) {
@@ -174,7 +164,6 @@ function drawWheel() {
         ctx.arc(cx, cy, (radius / 10) * i, 0, Math.PI * 2);
         ctx.stroke();
     }
-
     data.spheres.forEach((s, i) => {
         const angle = i * sliceAngle - Math.PI / 2;
         ctx.beginPath();
@@ -182,7 +171,6 @@ function drawWheel() {
         ctx.moveTo(cx, cy);
         ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
         ctx.stroke();
-        
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
         ctx.font = '600 12px Inter';
         ctx.textAlign = 'center';
@@ -190,17 +178,14 @@ function drawWheel() {
         const labelDist = radius + 35;
         const lx = cx + Math.cos(angle) * labelDist;
         const ly = cy + Math.sin(angle) * labelDist;
-        
         if (s.name.length > 10 && s.name.includes(' ')) {
             const parts = s.name.split(' ');
             ctx.fillText(parts[0], lx, ly - 7);
             ctx.fillText(parts.slice(1).join(' '), lx, ly + 7);
         } else {
             ctx.fillText(s.name, lx, ly);
-        Part
         }
     });
-
     ctx.beginPath();
     data.spheres.forEach((s, i) => {
         const angle = i * sliceAngle - Math.PI / 2;
@@ -216,7 +201,6 @@ function drawWheel() {
     ctx.strokeStyle = '#c084fc';
     ctx.lineWidth = 3;
     ctx.stroke();
-
     data.spheres.forEach((s, i) => {
         const angle = i * sliceAngle - Math.PI / 2;
         const r = (radius / 10) * s.score;
@@ -250,10 +234,8 @@ function setupEventListeners() {
     const saveBtn = document.getElementById('save-spheres');
     const addHabitBtn = document.getElementById('add-habit');
     const startDayBtn = document.getElementById('start-day-action');
-
     if (openBtn) openBtn.onclick = () => { renderSettings(); ui.settingsModal.classList.remove('hidden'); };
     if (closeBtn) closeBtn.onclick = () => ui.settingsModal.classList.add('hidden');
-    
     if (startDayBtn) startDayBtn.onclick = () => {
         const today = new Date().toISOString().split('T')[0];
         if (!data.openedDays.includes(today)) {
@@ -262,7 +244,6 @@ function setupEventListeners() {
             alert('День начат!');
         }
     };
-    
     if (saveBtn) saveBtn.onclick = () => {
         document.querySelectorAll('.s-edit-row').forEach(row => {
             const idx = row.dataset.idx;
@@ -273,7 +254,6 @@ function setupEventListeners() {
         saveData();
         ui.settingsModal.classList.add('hidden');
     };
-    
     if (addHabitBtn) addHabitBtn.onclick = () => {
         const input = document.getElementById('new-habit-name');
         const n = input.value.trim();
