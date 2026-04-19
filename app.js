@@ -39,29 +39,18 @@ function shiftDate(dateStr, days) {
 }
 
 function getHabitStreak(habitId) {
-  const habitDone = getHabitDone();
-  const dates = Object.entries(habitDone)
-    .filter(([key, value]) => key === habitId && !!value)
-    .map(([, value]) => value)
-    .sort();
-
-  if (dates.length === 0) return 0;
-
-  const uniqueDates = [...new Set(dates)];
+  const d = loadData();
+  const history = (d.habitHistory && d.habitHistory[habitId]) || [];
+  if (history.length === 0) return 0;
+  const unique = [...new Set(history)].sort();
   const today = getTodayStr();
   const yesterday = shiftDate(today, -1);
-  let current = uniqueDates[uniqueDates.length - 1];
-
-  if (current !== today && current !== yesterday) return 0;
-
+  let last = unique[unique.length - 1];
+  if (last !== today && last !== yesterday) return 0;
   let streak = 1;
-  for (let i = uniqueDates.length - 2; i >= 0; i--) {
-    if (shiftDate(current, -1) === uniqueDates[i]) {
-      streak++;
-      current = uniqueDates[i];
-    } else {
-      break;
-    }
+  for (let i = unique.length - 2; i >= 0; i--) {
+    if (shiftDate(last, -1) === unique[i]) { streak++; last = unique[i]; }
+    else break;
   }
   return streak;
 }
@@ -93,6 +82,7 @@ function ensureDefaults() {
   if (!d.improved) { d.improved = {}; changed = true; }
   if (!d.habits) { d.habits = []; changed = true; }
   if (!d.habitDone) { d.habitDone = {}; changed = true; }
+  if (!d.habitHistory) { d.habitHistory = {}; changed = true; }
   if (changed) saveData(d);
 }
 
@@ -111,8 +101,7 @@ function activateTab(tabName) {
 document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
     if ((btn.dataset.tab === 'spheres' || btn.dataset.tab === 'habits') && !isDayOpened()) {
-      activateTab('days');
-      return;
+      activateTab('days'); return;
     }
     activateTab(btn.dataset.tab);
   });
@@ -164,8 +153,7 @@ document.getElementById('settings-save').addEventListener('click', () => {
   });
   saveData(d);
   overlay.classList.add('hidden');
-  renderSpheres();
-  drawWheel();
+  renderSpheres(); drawWheel();
   const btn = document.getElementById('settings-save');
   btn.textContent = '✅ Сохранено!';
   setTimeout(() => btn.textContent = '💾 Сохранить сферы', 1500);
@@ -178,18 +166,9 @@ function renderSettingsHabits() {
   habits.forEach((h, i) => {
     const row = document.createElement('div');
     row.className = 'settings-habit-row';
-    row.innerHTML = `
-      <div class="settings-habit-texts">
-        <span class="settings-habit-name">${h.emoji} ${h.name}</span>
-        <span class="settings-habit-purpose-text">${h.purpose || 'Без описания'}</span>
-      </div>
-      <button class="btn-remove" data-i="${i}">✕</button>
-    `;
+    row.innerHTML = `<span class="settings-habit-name">${h.emoji} ${h.name}</span><button class="btn-remove" data-i="${i}">✕</button>`;
     row.querySelector('.btn-remove').addEventListener('click', () => {
-      const d = loadData();
-      d.habits.splice(i, 1);
-      saveData(d);
-      renderSettingsHabits();
+      const d = loadData(); d.habits.splice(i, 1); saveData(d); renderSettingsHabits();
     });
     container.appendChild(row);
   });
@@ -197,20 +176,15 @@ function renderSettingsHabits() {
 
 document.getElementById('add-habit-btn').addEventListener('click', () => {
   const input = document.getElementById('new-habit-input');
-  const purposeInput = document.getElementById('new-habit-purpose');
   const val = input.value.trim();
-  const purpose = purposeInput.value.trim();
   if (!val) return;
   const d = loadData();
   if (!d.habits) d.habits = [];
   const emojiMatch = val.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
   const emoji = emojiMatch ? emojiMatch[0] : '🔹';
   const name = emojiMatch ? val.slice(emoji.length).trim() : val;
-  d.habits.push({ id: 'h_' + Date.now(), emoji, name, purpose });
-  saveData(d);
-  input.value = '';
-  purposeInput.value = '';
-  renderSettingsHabits();
+  d.habits.push({ id: 'h_' + Date.now(), emoji, name });
+  saveData(d); input.value = ''; renderSettingsHabits();
 });
 
 document.getElementById('new-habit-input').addEventListener('keydown', e => {
@@ -218,8 +192,7 @@ document.getElementById('new-habit-input').addEventListener('keydown', e => {
 });
 
 document.getElementById('settings-habits-save').addEventListener('click', () => {
-  overlay.classList.add('hidden');
-  renderHabits();
+  overlay.classList.add('hidden'); renderHabits();
   const btn = document.getElementById('settings-habits-save');
   btn.textContent = '✅ Сохранено!';
   setTimeout(() => btn.textContent = '💾 Сохранить привычки', 1500);
@@ -227,8 +200,7 @@ document.getElementById('settings-habits-save').addEventListener('click', () => 
 
 document.getElementById('settings-reset').addEventListener('click', () => {
   if (confirm('Точно? Все данные будут удалены.')) {
-    localStorage.removeItem('lifeRPG');
-    location.reload();
+    localStorage.removeItem('lifeRPG'); location.reload();
   }
 });
 
@@ -248,7 +220,6 @@ function renderSpheres() {
     }).join('');
     const div = document.createElement('div');
     div.className = 'sphere-item' + (isImproved ? ' improved' : '');
-    div.dataset.id = s.id;
     div.innerHTML = `
       <div class="sphere-row">
         <span class="sphere-name">${s.name}</span>
@@ -257,8 +228,7 @@ function renderSpheres() {
           <span class="sphere-score" style="color:${s.color}">${val}</span>
           ${isImproved ? '<span class="improved-badge">✨</span>' : ''}
         </div>
-      </div>
-    `;
+      </div>`;
     div.addEventListener('click', () => {
       if (!isDayOpened()) { activateTab('days'); return; }
       toggleImproved(s.id);
@@ -273,8 +243,7 @@ function toggleImproved(id) {
   if (!d.improved) d.improved = {};
   if (d.improved[id] === today) delete d.improved[id];
   else d.improved[id] = today;
-  saveData(d);
-  renderSpheres();
+  saveData(d); renderSpheres();
 }
 
 function renderHabits() {
@@ -284,37 +253,37 @@ function renderHabits() {
   const container = document.getElementById('habits-list');
   const empty = document.getElementById('habits-empty');
   container.innerHTML = '';
-
-  if (habits.length === 0) {
-    empty.classList.remove('hidden');
-    return;
-  }
+  if (habits.length === 0) { empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
-
   habits.forEach(h => {
     const done = habitDone[h.id] === today;
     const streak = getHabitStreak(h.id);
+    const streakLabel = streak >= 2 ? `🔥 ${streak} дн.` : streak === 1 ? '🔥 1 дн.' : '—';
     const div = document.createElement('div');
     div.className = 'habit-item' + (done ? ' done' : '');
     div.innerHTML = `
       <div class="habit-check">${done ? '✅' : '⬜'}</div>
       <div class="habit-info">
         <span class="habit-name">${h.emoji} ${h.name}</span>
-        <span class="habit-purpose">${h.purpose || 'Без описания'}</span>
         <div class="habit-meta">
-          <span class="habit-streak">🔥 ${streak} дн.</span>
-          ${done ? '<span class="habit-status">Сегодня сделано</span>' : '<span class="habit-status habit-status-muted">Ещё не отмечено</span>'}
+          <span class="habit-streak ${streak > 0 ? 'active' : ''}">${streakLabel}</span>
+          <span class="habit-status ${done ? '' : 'habit-status-muted'}">${done ? 'Сегодня сделано' : 'Ещё не отмечено'}</span>
         </div>
-      </div>
-    `;
+      </div>`;
     div.addEventListener('click', () => {
       if (!isDayOpened()) { activateTab('days'); return; }
       const d = loadData();
       if (!d.habitDone) d.habitDone = {};
-      if (d.habitDone[h.id] === today) delete d.habitDone[h.id];
-      else d.habitDone[h.id] = today;
-      saveData(d);
-      renderHabits();
+      if (!d.habitHistory) d.habitHistory = {};
+      if (!d.habitHistory[h.id]) d.habitHistory[h.id] = [];
+      if (d.habitDone[h.id] === today) {
+        delete d.habitDone[h.id];
+        d.habitHistory[h.id] = d.habitHistory[h.id].filter(dt => dt !== today);
+      } else {
+        d.habitDone[h.id] = today;
+        if (!d.habitHistory[h.id].includes(today)) d.habitHistory[h.id].push(today);
+      }
+      saveData(d); renderHabits();
     });
     container.appendChild(div);
   });
@@ -326,8 +295,7 @@ function drawWheel() {
   const spheres = getSpheres();
   const scores = getScores();
   const cx = canvas.width / 2, cy = canvas.height / 2;
-  const R = cx - 30;
-  const n = spheres.length;
+  const R = cx - 30, n = spheres.length;
   const step = (Math.PI * 2) / n;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   for (let i = 10; i >= 1; i--) {
@@ -339,14 +307,11 @@ function drawWheel() {
       j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
     ctx.closePath();
-    ctx.strokeStyle = i % 2 === 0 ? '#252538' : '#1a1a2e';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    ctx.strokeStyle = i % 2 === 0 ? '#252538' : '#1a1a2e'; ctx.lineWidth = 1; ctx.stroke();
   }
   for (let j = 0; j < n; j++) {
     const angle = step * j - Math.PI / 2;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
+    ctx.beginPath(); ctx.moveTo(cx, cy);
     ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
     ctx.strokeStyle = '#2a2a3e'; ctx.lineWidth = 1; ctx.stroke();
   }
@@ -355,24 +320,17 @@ function drawWheel() {
     const angleStart = step * j - Math.PI / 2;
     const angleEnd = step * (j + 1) - Math.PI / 2;
     const r = (R * val) / 10;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, angleStart, angleEnd);
-    ctx.closePath();
-    ctx.fillStyle = s.color + '55';
-    ctx.fill();
-    ctx.strokeStyle = s.color;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angleStart, angleEnd); ctx.closePath();
+    ctx.fillStyle = s.color + '55'; ctx.fill();
+    ctx.strokeStyle = s.color; ctx.lineWidth = 1.5; ctx.stroke();
   });
   spheres.forEach((s, j) => {
     const angle = step * j + step / 2 - Math.PI / 2;
     const r = R + 18;
-    const x = cx + r * Math.cos(angle), y = cy + r * Math.sin(angle);
-    ctx.font = '11px Segoe UI';
-    ctx.fillStyle = s.color;
+    ctx.font = '11px Segoe UI'; ctx.fillStyle = s.color;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(s.name.split(' ')[0], x, y);
+    ctx.fillText(s.name.split(' ')[0], cx + r * Math.cos(angle), cy + r * Math.sin(angle));
   });
 }
 
@@ -389,36 +347,28 @@ function renderDays() {
   const currentYear = new Date().getFullYear();
   const currentYearStartIdx = (currentYear - START_YEAR) * DAYS_PER_YEAR;
   const passedInCurrentYear = Math.max(0, Math.min(DAYS_PER_YEAR, doneCount - currentYearStartIdx));
-
   document.getElementById('days-done').textContent = doneCount;
   document.getElementById('days-pct-label').textContent = pct + '% • осталось ' + remaining;
   document.getElementById('days-progress-fill').style.width = pct + '%';
   updateRitual();
-
   const container = document.getElementById('years-grid');
   container.innerHTML = '';
-
   for (let y = 0; y < YEARS; y++) {
     const year = START_YEAR + y;
     const isCurrent = year === currentYear;
     const row = document.createElement('div');
     row.className = 'year-row' + (isCurrent ? ' current-year' : '');
-
     const label = document.createElement('div');
-    label.className = 'year-label';
-    label.textContent = year;
+    label.className = 'year-label'; label.textContent = year;
     row.appendChild(label);
-
     if (isCurrent) {
       const meta = document.createElement('div');
       meta.className = 'year-current-meta';
       meta.textContent = passedInCurrentYear + ' / ' + DAYS_PER_YEAR;
       row.appendChild(meta);
     }
-
     const cells = document.createElement('div');
     cells.className = 'year-cells';
-
     for (let d = 0; d < DAYS_PER_YEAR; d++) {
       const idx = y * DAYS_PER_YEAR + d;
       const cell = document.createElement('div');
@@ -427,18 +377,14 @@ function renderDays() {
       else if (idx === doneCount) cell.classList.add('today');
       cells.appendChild(cell);
     }
-
-    row.appendChild(cells);
-    container.appendChild(row);
+    row.appendChild(cells); container.appendChild(row);
   }
 }
 
 const holdBtn = document.getElementById('start-day-hold');
 const holdFill = document.getElementById('start-day-fill');
 const holdText = document.getElementById('start-day-text');
-let holdFrame = null;
-let holdStartedAt = 0;
-let holding = false;
+let holdFrame = null, holdStartedAt = 0, holding = false;
 
 function resetHoldUi() {
   holdFill.style.width = '0%';
@@ -446,8 +392,7 @@ function resetHoldUi() {
 }
 
 function finishHold() {
-  holding = false;
-  openToday();
+  holding = false; openToday();
   holdFill.style.width = '100%';
   holdText.textContent = '✅ День начат';
   setTimeout(() => activateTab('spheres'), 400);
@@ -455,8 +400,7 @@ function finishHold() {
 
 function startHold() {
   if (isDayOpened() || holding) return;
-  holding = true;
-  holdStartedAt = Date.now();
+  holding = true; holdStartedAt = Date.now();
   const tick = () => {
     if (!holding) return;
     const elapsed = Date.now() - holdStartedAt;
@@ -474,8 +418,7 @@ function stopHold() {
   if (!holding) return;
   holding = false;
   if (holdFrame) cancelAnimationFrame(holdFrame);
-  holdFrame = null;
-  resetHoldUi();
+  holdFrame = null; resetHoldUi();
 }
 
 ['mousedown','touchstart','pointerdown'].forEach(evt =>
@@ -488,5 +431,4 @@ function stopHold() {
 ensureDefaults();
 activateTab('days');
 renderSpheres();
-renderHabits();
 drawWheel();
