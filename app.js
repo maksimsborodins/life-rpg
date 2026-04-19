@@ -13,11 +13,8 @@ const START_YEAR = 2026;
 const YEARS = 30;
 const DAYS_PER_YEAR = 365;
 const TOTAL_DAYS = YEARS * DAYS_PER_YEAR;
-const START_DATE = `${START_YEAR}-01-01`;
-const HOLD_MS = 2000;
-const STORAGE_KEY = 'lifeRPG_Premium';
+const STORAGE_KEY = 'lifeRPG_Dashboard_v1';
 
-/* State & Data */
 let data = loadData();
 
 function loadData() {
@@ -36,87 +33,92 @@ function loadData() {
 
 function saveData() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    updateStats();
+    updateUI();
 }
 
 function getTodayStr() {
     return new Date().toLocaleDateString('en-CA');
 }
 
-/* UI Logic */
-const el = {
-    overlay: document.getElementById('settings-overlay'),
-    spheresList: document.getElementById('spheres-container'),
-    habitsList: document.getElementById('habits-container'),
-    daysLived: document.getElementById('days-lived'),
-    progress: document.getElementById('life-progress'),
-    avgLevel: document.getElementById('avg-level'),
-    startBtn: document.getElementById('start-day-btn'),
-    spheresEdit: document.getElementById('settings-spheres-list'),
-    habitsEdit: document.getElementById('settings-habits-list')
+/* UI Elements Mapping */
+const ui = {
+    statDays: document.getElementById('stat-days'),
+    statProgress: document.getElementById('stat-progress'),
+    statAvg: document.getElementById('stat-avg'),
+    statStreak: document.getElementById('stat-streak'),
+    spheresGrid: document.getElementById('dashboard-spheres'),
+    habitsList: document.getElementById('dashboard-habits'),
+    settingsModal: document.getElementById('settings-modal'),
+    settingsSpheres: document.getElementById('settings-spheres'),
+    settingsHabits: document.getElementById('settings-habits'),
+    currentDate: document.getElementById('current-date')
 };
 
 function init() {
-    renderDashboard();
-    setupEvents();
-    updateStats();
+    setupDate();
+    updateUI();
+    setupEventListeners();
 }
 
-function updateStats() {
+function setupDate() {
+    const options = { weekday: 'long', day: 'numeric', month: 'long' };
+    ui.currentDate.innerText = new Date().toLocaleDateString('ru-RU', options);
+}
+
+function updateUI() {
+    // Stats
     const days = data.openedDays.length;
-    if (el.daysLived) el.daysLived.innerText = days;
-    if (el.progress) el.progress.innerText = ((days / TOTAL_DAYS) * 100).toFixed(4) + '%';
+    ui.statDays.innerText = days.toLocaleString();
+    ui.statProgress.innerText = ((days / TOTAL_DAYS) * 100).toFixed(4) + '%';
     
     const avg = data.spheres.reduce((acc, s) => acc + (s.score || 0), 0) / data.spheres.length;
-    if (el.avgLevel) el.avgLevel.innerText = (avg * 10).toFixed(1) + '%';
+    ui.statAvg.innerText = avg.toFixed(1);
+
+    // Calc Streak
+    let streak = 0;
+    const habitIds = data.habits.map(h => h.id);
+    if (habitIds.length > 0) {
+        let curr = new Date();
+        while (true) {
+            const dStr = curr.toLocaleDateString('en-CA');
+            const doneAtDate = data.habitHistory[dStr] || [];
+            const allDone = habitIds.every(id => doneAtDate.includes(id));
+            if (allDone && habitIds.length > 0) {
+                streak++;
+                curr.setDate(curr.getDate() - 1);
+            } else {
+                if (dStr === getTodayStr()) { curr.setDate(curr.getDate() - 1); continue; }
+                break;
+            }
+        }
+    }
+    ui.statStreak.innerText = streak;
+
+    renderSpheres();
+    renderHabits();
 }
 
-function renderDashboard() {
-    // Spheres
-    el.spheresList.innerHTML = '';
+function renderSpheres() {
+    ui.spheresGrid.innerHTML = '';
     const today = getTodayStr();
     const improved = data.sphereProgress[today] || [];
-    
+
     data.spheres.forEach(s => {
-        const active = improved.includes(s.id);
+        const isActive = improved.includes(s.id);
         const card = document.createElement('div');
-        card.className = `sphere-card ${active ? 'active' : ''}`;
-        card.style.setProperty('--sphere-color', s.color);
+        card.className = `sphere-item`;
+        if (isActive) card.style.borderColor = s.color;
+        
         card.innerHTML = `
-            <div class="sphere-header">
-                <span class="sphere-name">${s.name}</span>
-                <span class="sphere-score">Lv ${s.score || 0}</span>
+            <span class="sphere-name">${s.name}</span>
+            <div class="level-track">
+                <div class="level-fill" style="width: ${(s.score || 0) * 10}%; background: ${s.color}"></div>
             </div>
-            <div class="progress-track">
-                <div class="progress-fill" style="width: ${(s.score || 0) * 10}%"></div>
-            </div>
+            <span style="font-size:10px; color:var(--text-muted); margin-top:4px; display:block;">Уровень ${s.score || 0}</span>
         `;
         card.onclick = () => toggleSphere(s.id);
-        el.spheresList.appendChild(card);
+        ui.spheresGrid.appendChild(card);
     });
-
-    // Habits
-    el.habitsList.innerHTML = '';
-    const done = data.habitHistory[today] || [];
-    
-    if (data.habits.length === 0) {
-        el.habitsList.innerHTML = '<div style="color: var(--text-dim)">Привычки не добавлены. Зайди в настройки ⚙️</div>';
-    } else {
-        data.habits.forEach(h => {
-            const isDone = done.includes(h.id);
-            const row = document.createElement('div');
-            row.className = `habit-row ${isDone ? 'done' : ''}`;
-            row.innerHTML = `
-                <div class="habit-checkbox">${isDone ? '✓' : ''}</div>
-                <div class="habit-text">
-                    <span class="habit-name">${h.name}</span>
-                    <span class="habit-purpose">${h.purpose || ''}</span>
-                </div>
-            `;
-            row.onclick = () => toggleHabit(h.id);
-            el.habitsList.appendChild(row);
-        });
-    }
 }
 
 function toggleSphere(id) {
@@ -126,7 +128,32 @@ function toggleSphere(id) {
     if (idx > -1) data.sphereProgress[today].splice(idx, 1);
     else data.sphereProgress[today].push(id);
     saveData();
-    renderDashboard();
+}
+
+function renderHabits() {
+    ui.habitsList.innerHTML = '';
+    const today = getTodayStr();
+    const done = data.habitHistory[today] || [];
+
+    if (data.habits.length === 0) {
+        ui.habitsList.innerHTML = '<p style="color:var(--text-muted); font-size:14px;">Нет активных привычек</p>';
+        return;
+    }
+
+    data.habits.forEach(h => {
+        const isDone = done.includes(h.id);
+        const card = document.createElement('div');
+        card.className = `habit-card ${isDone ? 'done' : ''}`;
+        card.innerHTML = `
+            <div class="checkbox">${isDone ? '✓' : ''}</div>
+            <div class="habit-info">
+                <p class="h-name">${h.name}</p>
+                <p style="font-size:11px; color:var(--text-muted);">${h.purpose || ''}</p>
+            </div>
+        `;
+        card.onclick = () => toggleHabit(h.id);
+        ui.habitsList.appendChild(card);
+    });
 }
 
 function toggleHabit(id) {
@@ -136,88 +163,50 @@ function toggleHabit(id) {
     if (idx > -1) data.habitHistory[today].splice(idx, 1);
     else data.habitHistory[today].push(id);
     saveData();
-    renderDashboard();
 }
 
-function setupEvents() {
-    document.getElementById('settings-open').onclick = () => {
+function setupEventListeners() {
+    document.getElementById('open-settings').onclick = () => {
         renderSettings();
-        el.overlay.classList.remove('hidden');
+        ui.settingsModal.classList.remove('hidden');
     };
+    document.getElementById('close-settings').onclick = () => ui.settingsModal.classList.add('hidden');
     
-    document.getElementById('settings-close').onclick = () => el.overlay.classList.add('hidden');
-
-    document.getElementById('settings-save').onclick = () => {
-        const rows = document.querySelectorAll('.edit-row');
-        rows.forEach(row => {
-            const idx = row.dataset.idx;
-            data.spheres[idx].name = row.querySelector('.edit-name').value;
-            data.spheres[idx].score = parseInt(row.querySelector('.edit-score').value) || 0;
-            data.spheres[idx].color = row.querySelector('.edit-color').value;
-        });
-        saveData();
-        renderDashboard();
-        alert('Сохранено!');
-    };
-
-    document.getElementById('add-habit-btn').onclick = () => {
-        const name = document.getElementById('new-habit-input').value.trim();
-        const purp = document.getElementById('new-habit-purpose').value.trim();
-        if (!name) return;
-        data.habits.push({ id: 'h_' + Date.now(), name, purpose: purp });
-        document.getElementById('new-habit-input').value = '';
-        document.getElementById('new-habit-purpose').value = '';
-        saveData();
-        renderSettings();
-        renderDashboard();
-    };
-
-    // Hold Logic
-    let holdTimer;
-    let progress = 0;
-    
-    const startHold = (e) => {
-        e.preventDefault();
-        progress = 0;
-        el.startBtn.classList.add('holding');
-        holdTimer = setInterval(() => {
-            progress += 2;
-            el.startBtn.style.background = `linear-gradient(90deg, var(--accent-success) ${progress}%, var(--accent-primary) ${progress}%)`;
-            if (progress >= 100) {
-                finishHold();
-            }
-        }, HOLD_MS / 50);
-    };
-
-    const finishHold = () => {
-        clearInterval(holdTimer);
+    document.getElementById('start-day-action').onclick = () => {
         const today = getTodayStr();
         if (!data.openedDays.includes(today)) {
             data.openedDays.push(today);
             saveData();
-            el.startBtn.innerText = 'День начат! ✨';
-            el.startBtn.style.background = 'var(--accent-success)';
-            setTimeout(() => {
-                el.startBtn.innerText = 'Удерживай, чтобы начать день';
-                el.startBtn.style.background = 'var(--accent-primary)';
-                el.startBtn.classList.remove('holding');
-            }, 2000);
+            alert('Новый день начат! Удачи, Игрок.');
+        } else {
+            alert('День уже был начат ранее.');
         }
     };
 
-    const cancelHold = () => {
-        clearInterval(holdTimer);
-        el.startBtn.classList.remove('holding');
-        el.startBtn.style.background = 'var(--accent-primary)';
+    document.getElementById('save-spheres').onclick = () => {
+        const rows = document.querySelectorAll('.s-edit-row');
+        rows.forEach(row => {
+            const idx = row.dataset.idx;
+            data.spheres[idx].name = row.querySelector('.e-name').value;
+            data.spheres[idx].score = parseInt(row.querySelector('.e-score').value) || 0;
+            data.spheres[idx].color = row.querySelector('.e-color').value;
+        });
+        saveData();
+        alert('Сферы обновлены');
     };
 
-    el.startBtn.addEventListener('mousedown', startHold);
-    el.startBtn.addEventListener('touchstart', startHold);
-    window.addEventListener('mouseup', cancelHold);
-    window.addEventListener('touchend', cancelHold);
+    document.getElementById('add-habit').onclick = () => {
+        const name = document.getElementById('new-habit-name').value.trim();
+        const desc = document.getElementById('new-habit-desc').value.trim();
+        if (!name) return;
+        data.habits.push({ id: 'h_' + Date.now(), name, purpose: desc });
+        document.getElementById('new-habit-name').value = '';
+        document.getElementById('new-habit-desc').value = '';
+        saveData();
+        renderSettings();
+    };
 
-    // Data Management
-    document.getElementById('export-data').onclick = () => {
+    document.getElementById('export-btn').onclick = () => {
         const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -225,8 +214,8 @@ function setupEvents() {
         a.click();
     };
 
-    document.getElementById('import-data-btn').onclick = () => document.getElementById('import-data-input').click();
-    document.getElementById('import-data-input').onchange = (e) => {
+    document.getElementById('import-trigger').onclick = () => document.getElementById('import-file').click();
+    document.getElementById('import-file').onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
@@ -235,13 +224,13 @@ function setupEvents() {
                 data = JSON.parse(ev.target.result);
                 saveData();
                 location.reload();
-            } catch { alert('Ошибка импорта'); }
+            } catch { alert('Ошибка формата файла'); }
         };
         reader.readAsText(file);
     };
 
-    document.getElementById('reset-data').onclick = () => {
-        if (confirm('Удалить всё? Это необратимо.')) {
+    document.getElementById('danger-reset').onclick = () => {
+        if (confirm('ВНИМАНИЕ: Все данные будут удалены безвозвратно. Продолжить?')) {
             localStorage.removeItem(STORAGE_KEY);
             location.reload();
         }
@@ -249,34 +238,39 @@ function setupEvents() {
 }
 
 function renderSettings() {
-    el.spheresEdit.innerHTML = '';
+    ui.settingsSpheres.innerHTML = '';
     data.spheres.forEach((s, i) => {
         const row = document.createElement('div');
-        row.className = 'edit-row';
+        row.className = 's-edit-row';
         row.dataset.idx = i;
-        row.style = 'display: grid; grid-template-columns: 1fr 60px 50px; gap: 8px; margin-bottom: 8px;';
+        row.style = 'display:grid; grid-template-columns:1fr 80px 50px; gap:var(--p8); align-items:center;';
         row.innerHTML = `
-            <input type="text" class="edit-name input-glass" value="${s.name}">
-            <input type="number" class="edit-score input-glass" value="${s.score || 0}" min="0" max="10">
-            <input type="color" class="edit-color" value="${s.color}" style="height: 100%; width: 100%; border: none; background: none; padding: 0;">
+            <input type="text" class="e-name" value="${s.name}" style="background:var(--bg-main); border:1px solid var(--border); padding:var(--p8); color:white; border-radius:var(--p8);">
+            <input type="number" class="e-score" value="${s.score || 0}" min="0" max="10" style="background:var(--bg-main); border:1px solid var(--border); padding:var(--p8); color:white; border-radius:var(--p8);">
+            <input type="color" class="e-color" value="${s.color}" style="width:100%; height:34px; border:none; background:none; cursor:pointer;">
         `;
-        el.spheresEdit.appendChild(row);
+        ui.settingsSpheres.appendChild(row);
     });
 
-    el.habitsEdit.innerHTML = '';
+    ui.settingsHabits.innerHTML = '';
     data.habits.forEach((h, i) => {
         const item = document.createElement('div');
-        item.style = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg-input); border-radius: 8px; margin-bottom: 4px;';
-        item.innerHTML = `<span>${h.name}</span><button class="btn-premium btn-danger" onclick="removeHabit(${i})" style="padding: 4px 8px;">🗑️</button>`;
-        el.habitsEdit.appendChild(item);
+        item.style = 'display:flex; justify-content:space-between; align-items:center; padding:var(--p12); background:var(--bg-hover); border-radius:var(--p12); margin-bottom:var(--p8); border:1px solid var(--border);';
+        item.innerHTML = `
+            <div>
+                <p style="font-weight:600; font-size:14px;">${h.name}</p>
+                <p style="font-size:11px; color:var(--text-muted);">${h.purpose || ''}</p>
+            </div>
+            <button onclick="deleteHabit(${i})" style="background:none; border:none; color:#f87171; cursor:pointer; font-size:14px;">🗑️</button>
+        `;
+        ui.settingsHabits.appendChild(item);
     });
 }
 
-window.removeHabit = (i) => {
+window.deleteHabit = (i) => {
     data.habits.splice(i, 1);
     saveData();
     renderSettings();
-    renderDashboard();
 };
 
 init();
