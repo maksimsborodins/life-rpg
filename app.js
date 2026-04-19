@@ -62,7 +62,7 @@ function init() {
     renderAll();
     setupNavigation();
     setupEventListeners();
-    
+
     const today = new Date().toISOString().split('T')[0];
     if (data.lastVisit !== today) {
         data.habits.forEach(h => {
@@ -72,7 +72,7 @@ function init() {
         data.lastVisit = today;
         saveData({ wheel: false });
     }
-    
+
     setInterval(updateGreeting, 60000);
 }
 
@@ -126,7 +126,7 @@ function renderSpheres() {
 function renderHabits() {
     if (!ui.dashboardHabits) return;
     ui.dashboardHabits.innerHTML = '';
-    data.habits.forEach((h, i) => {
+    data.habits.forEach((h) => {
         const card = document.createElement('div');
         card.className = `habit-card ${h.done ? 'done' : ''}`;
         card.innerHTML = `
@@ -139,7 +139,7 @@ function renderHabits() {
                 </div>
             </div>
         `;
-        card.onclick = (e) => {
+        card.onclick = () => {
             h.done = !h.done;
             if (h.done) h.streak = (h.streak || 0) + 1;
             else h.streak = Math.max(0, (h.streak || 0) - 1);
@@ -237,17 +237,12 @@ function setupEventListeners() {
     const closeBtn = document.getElementById('close-settings');
     const saveBtn = document.getElementById('save-spheres');
     const addHabitBtn = document.getElementById('add-habit');
-    const startDayBtn = document.getElementById('start-day-action');
+    const exportBtn = document.getElementById('export-btn');
+    const importInput = document.getElementById('import-input');
+
     if (openBtn) openBtn.onclick = () => { renderSettings(); ui.settingsModal.classList.remove('hidden'); };
     if (closeBtn) closeBtn.onclick = () => ui.settingsModal.classList.add('hidden');
-    if (startDayBtn) startDayBtn.onclick = () => {
-        const today = new Date().toISOString().split('T')[0];
-        if (!data.openedDays.includes(today)) {
-            data.openedDays.push(today);
-            saveData({ wheel: false });
-            alert('День начат!');
-        }
-    };
+
     if (saveBtn) saveBtn.onclick = () => {
         document.querySelectorAll('.s-edit-row').forEach(row => {
             const idx = row.dataset.idx;
@@ -255,9 +250,10 @@ function setupEventListeners() {
             data.spheres[idx].score = parseInt(row.querySelector('.e-score').value) || 0;
             data.spheres[idx].color = row.querySelector('.e-color').value;
         });
-        saveData({ wheel: false });
+        saveData({ wheel: true });
         ui.settingsModal.classList.add('hidden');
     };
+
     if (addHabitBtn) addHabitBtn.onclick = () => {
         const input = document.getElementById('new-habit-name');
         const n = input.value.trim();
@@ -267,6 +263,37 @@ function setupEventListeners() {
         saveData({ wheel: false });
         renderSettings();
     };
+
+    if (exportBtn) exportBtn.onclick = exportData;
+    if (importInput) importInput.addEventListener('change', e => {
+        importData(e.target.files[0]);
+        e.target.value = '';
+    });
+}
+
+function exportData() {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `project-life-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
+async function importData(file) {
+    if (!file) return;
+    try {
+        const text = await file.text();
+        data = JSON.parse(text);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        renderAll();
+        renderSettings();
+    } catch {
+        alert('Ошибка: файл повреждён');
+    }
 }
 
 function renderSettings() {
@@ -285,7 +312,6 @@ function renderSettings() {
         ui.settingsSpheres.appendChild(row);
     });
 
-    // ← НОВЫЙ БЛОК: список привычек с удалением
     const habitsContainer = document.getElementById('settings-habits');
     if (!habitsContainer) return;
     habitsContainer.innerHTML = '<p style="color:var(--text-muted); font-size:13px; margin-bottom:12px;">Привычки</p>';
@@ -300,19 +326,16 @@ function renderSettings() {
         row.style = 'display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:12px; padding:12px 16px; margin-bottom:8px;';
         row.innerHTML = `
             <span style="color:white; font-size:14px;">${h.name}</span>
-            <button data-habit-idx="${i}" style="background:none; border:none; color:#555; font-size:20px; cursor:pointer; line-height:1; padding:4px 8px; border-radius:6px; transition:color 0.2s;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#555'">−</button>
+            <button style="background:none; border:none; color:#555; font-size:20px; cursor:pointer; line-height:1; padding:4px 8px; border-radius:6px; transition:color 0.2s;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#555'">−</button>
         `;
-        row.querySelector('button').addEventListener('click', () => {
-            deleteHabit(i);
-        });
+        row.querySelector('button').addEventListener('click', () => deleteHabit(i));
         habitsContainer.appendChild(row);
     });
 }
 
 function deleteHabit(index) {
     data.habits.splice(index, 1);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    renderHabits();
+    saveData({ wheel: false });
     renderSettings();
 }
 
