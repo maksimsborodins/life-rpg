@@ -12,22 +12,13 @@
 </head>
 <body>
 
-  <div id="day-gate" class="day-gate">
-    <div class="day-gate-card">
-      <div class="day-gate-badge">⏳ Новый день</div>
-      <h1 class="day-gate-title">Начни день осознанно</h1>
-      <p class="day-gate-text">Сначала открой новый день, а потом заходи в сферы и отмечай прогресс.</p>
-      <button id="start-day-btn" class="btn-primary day-gate-btn">✨ Начать новый день</button>
-    </div>
-  </div>
-
   <div id="settings-overlay" class="settings-overlay hidden">
     <div class="settings-panel">
       <div class="settings-header">
         <h3>⚙️ Настройки</h3>
         <button id="settings-close" class="settings-close">✕</button>
       </div>
-      <p class="settings-hint">Изменяй названия, цвета и баллы сфер. Баллы удобно обновлять после анализа месяца.</p>
+      <p class="settings-hint">Изменяй названия, цвета и баллы сфер. Баллы лучше пересматривать после анализа месяца.</p>
       <div id="settings-spheres-list"></div>
       <button id="settings-save" class="btn-primary">💾 Сохранить</button>
       <div class="settings-divider"></div>
@@ -44,7 +35,7 @@
 
   <div id="tab-spheres" class="tab">
     <h2>🌀 Сферы</h2>
-    <p class="spheres-hint">Нажми на сферу, если сегодня улучшил её — это не меняет балл, а просто отмечает прогресс дня.</p>
+    <p class="spheres-hint">Нажми на сферу, если сегодня улучшил её — это фиксирует прогресс, но не меняет месячный балл.</p>
     <div id="spheres-list"></div>
     <div class="wheel-section">
       <div class="wheel-title">Колесо баланса</div>
@@ -54,12 +45,26 @@
 
   <div id="tab-days" class="tab active">
     <h2>⏳ Остаток</h2>
+    <div class="days-hero">
+      <div class="days-hero-title">Твоё время ограничено</div>
+      <div class="days-hero-subtitle">Каждый день либо прожит осознанно, либо исчезает сам.</div>
+    </div>
+
     <div class="days-meta">
       <div class="days-meta-left"><strong id="days-done">0</strong> <span>/ 10 950 дней</span></div>
       <div class="days-meta-right" id="days-pct-label">0%</div>
     </div>
+
     <div class="days-progress-bar"><div id="days-progress-fill"></div></div>
-    <button id="close-day-btn" class="btn-primary btn-day">✅ День уже идет</button>
+
+    <div id="day-ritual" class="day-ritual">
+      <div class="ritual-label" id="ritual-label">Удерживай, чтобы начать сегодняшний день</div>
+      <button id="start-day-hold" class="start-day-hold">
+        <span class="start-day-fill" id="start-day-fill"></span>
+        <span class="start-day-text" id="start-day-text">Удерживай 3 секунды</span>
+      </button>
+    </div>
+
     <div id="years-grid"></div>
   </div>
 

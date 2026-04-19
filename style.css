@@ -10,57 +10,6 @@ body {
 
 .hidden { display: none !important; }
 
-/* DAY GATE */
-.day-gate {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  background: radial-gradient(circle at top, rgba(124,58,237,0.18), transparent 45%), rgba(5,5,8,0.96);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.day-gate-card {
-  width: 100%;
-  max-width: 360px;
-  background: #12121c;
-  border: 1px solid #2a2a3e;
-  border-radius: 22px;
-  padding: 24px 18px;
-  text-align: center;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
-}
-
-.day-gate-badge {
-  display: inline-block;
-  font-size: 12px;
-  color: #c084fc;
-  background: rgba(124,58,237,0.12);
-  border: 1px solid rgba(124,58,237,0.25);
-  border-radius: 999px;
-  padding: 6px 10px;
-  margin-bottom: 14px;
-}
-
-.day-gate-title {
-  font-size: 28px;
-  line-height: 1.15;
-  margin-bottom: 10px;
-  color: #fff;
-}
-
-.day-gate-text {
-  font-size: 14px;
-  color: #8b8ba7;
-  line-height: 1.5;
-  margin-bottom: 18px;
-}
-
-.day-gate-btn { margin-top: 0; }
-
-/* NAV */
 .nav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
@@ -189,18 +138,24 @@ h2 { font-size: 18px; margin-bottom: 6px; color: #c084fc; letter-spacing: 0.5px;
 }
 .btn-danger:hover { background: #1f0a0a; }
 
-.btn-day {
-  background: linear-gradient(135deg, #1f2937, #111827);
-  margin-bottom: 20px;
-  margin-top: 10px;
-  border: 1px solid #374151;
-  color: #9ca3af;
+/* DAYS HERO */
+.days-hero {
+  background: linear-gradient(180deg, rgba(124,58,237,0.12), rgba(17,17,24,1));
+  border: 1px solid rgba(124,58,237,0.18);
+  border-radius: 16px;
+  padding: 16px 14px;
+  margin-bottom: 14px;
 }
-.btn-day:disabled {
-  background: linear-gradient(135deg, #1f2937, #111827);
-  color: #9ca3af;
-  border-color: #374151;
-  cursor: default;
+.days-hero-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f5f3ff;
+  margin-bottom: 4px;
+}
+.days-hero-subtitle {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #a1a1b8;
 }
 
 .days-meta {
@@ -223,7 +178,7 @@ h2 { font-size: 18px; margin-bottom: 6px; color: #c084fc; letter-spacing: 0.5px;
   height: 4px;
   background: #1a1a2e;
   border-radius: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   overflow: hidden;
 }
 #days-progress-fill {
@@ -234,13 +189,53 @@ h2 { font-size: 18px; margin-bottom: 6px; color: #c084fc; letter-spacing: 0.5px;
   width: 0%;
 }
 
+/* RITUAL */
+.day-ritual {
+  margin-bottom: 18px;
+}
+.day-ritual.done {
+  display: none;
+}
+.ritual-label {
+  font-size: 12px;
+  color: #7c7c98;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.start-day-hold {
+  position: relative;
+  width: 100%;
+  height: 58px;
+  border: 1px solid rgba(74,222,128,0.24);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #121a14, #0e1310);
+  overflow: hidden;
+  cursor: pointer;
+}
+.start-day-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, #166534, #22c55e);
+  transition: width 0.05s linear;
+}
+.start-day-text {
+  position: relative;
+  z-index: 1;
+  color: #dcfce7;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
 #years-grid {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
 }
-
 .year-row {
   display: flex;
   align-items: center;
@@ -249,14 +244,12 @@ h2 { font-size: 18px; margin-bottom: 6px; color: #c084fc; letter-spacing: 0.5px;
   background: #111118;
   border: 1px solid #1e1e2e;
 }
-
 .year-row.current-year {
   padding: 10px 10px;
   border-color: #a855f7;
   background: linear-gradient(180deg, rgba(168,85,247,0.12), rgba(19,17,31,1));
   box-shadow: 0 0 0 1px rgba(168,85,247,0.12), 0 10px 24px rgba(76,29,149,0.18);
 }
-
 .year-label {
   font-size: 10px;
   font-weight: 600;
@@ -266,13 +259,11 @@ h2 { font-size: 18px; margin-bottom: 6px; color: #c084fc; letter-spacing: 0.5px;
   margin-right: 8px;
   flex-shrink: 0;
 }
-
 .year-row.current-year .year-label {
   font-size: 14px;
   color: #e9d5ff;
   min-width: 42px;
 }
-
 .year-current-meta {
   font-size: 11px;
   color: #d8b4fe;
@@ -283,18 +274,13 @@ h2 { font-size: 18px; margin-bottom: 6px; color: #c084fc; letter-spacing: 0.5px;
   margin-right: 8px;
   flex-shrink: 0;
 }
-
 .year-cells {
   display: grid;
   grid-template-columns: repeat(365, 1fr);
   gap: 1.5px;
   flex: 1;
 }
-
-.year-row.current-year .year-cells {
-  gap: 2px;
-}
-
+.year-row.current-year .year-cells { gap: 2px; }
 .day-cell {
   aspect-ratio: 1;
   border-radius: 1px;
@@ -306,10 +292,7 @@ h2 { font-size: 18px; margin-bottom: 6px; color: #c084fc; letter-spacing: 0.5px;
   border-radius: 2px;
   box-shadow: 0 0 6px #c084fc;
 }
-
-.year-row.current-year .day-cell {
-  min-height: 5px;
-}
+.year-row.current-year .day-cell { min-height: 5px; }
 
 .settings-overlay {
   position: fixed;
@@ -321,7 +304,6 @@ h2 { font-size: 18px; margin-bottom: 6px; color: #c084fc; letter-spacing: 0.5px;
   align-items: flex-end;
 }
 .settings-overlay.hidden { display: none; }
-
 .settings-panel {
   background: #131320;
   border-top: 1px solid #2a2a3e;

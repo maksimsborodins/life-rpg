@@ -14,6 +14,7 @@ const YEARS = 30;
 const DAYS_PER_YEAR = 365;
 const TOTAL_DAYS = YEARS * DAYS_PER_YEAR;
 const START_DATE = '2026-01-01';
+const HOLD_MS = 3000;
 
 function loadData() { return JSON.parse(localStorage.getItem('lifeRPG') || '{}'); }
 function saveData(d) { localStorage.setItem('lifeRPG', JSON.stringify(d)); }
@@ -42,39 +43,21 @@ function openToday() {
   const d = loadData();
   d.openedDay = getTodayStr();
   saveData(d);
-  updateGate();
-}
-
-function updateGate() {
-  const gate = document.getElementById('day-gate');
-  if (isDayOpened()) gate.classList.add('hidden');
-  else gate.classList.remove('hidden');
+  updateRitual();
 }
 
 function ensureDefaults() {
   const d = loadData();
   let changed = false;
 
-  if (!d.seeded) {
-    d.seeded = true;
-    changed = true;
-  }
-
-  if (!d.spheres) {
-    d.spheres = DEFAULT_SPHERES;
-    changed = true;
-  }
-
+  if (!d.seeded) { d.seeded = true; changed = true; }
+  if (!d.spheres) { d.spheres = DEFAULT_SPHERES; changed = true; }
   if (!d.scores) {
     d.scores = {};
     DEFAULT_SPHERES.forEach(s => d.scores[s.id] = 5);
     changed = true;
   }
-
-  if (!d.improved) {
-    d.improved = {};
-    changed = true;
-  }
+  if (!d.improved) { d.improved = {}; changed = true; }
 
   if (changed) saveData(d);
 }
@@ -93,12 +76,16 @@ function activateTab(tabName) {
   if (tabName === 'days') renderDays();
 }
 
-// NAV
 document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
-  btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+  btn.addEventListener('click', () => {
+    if (btn.dataset.tab === 'spheres' && !isDayOpened()) {
+      activateTab('days');
+      return;
+    }
+    activateTab(btn.dataset.tab);
+  });
 });
 
-// SETTINGS
 const overlay = document.getElementById('settings-overlay');
 
 document.getElementById('open-settings').addEventListener('click', () => {
@@ -163,7 +150,6 @@ document.getElementById('settings-reset').addEventListener('click', () => {
   }
 });
 
-// SPHERES
 function renderSpheres() {
   const spheres = getSpheres();
   const scores = getScores();
@@ -194,7 +180,10 @@ function renderSpheres() {
       </div>
     `;
     div.addEventListener('click', () => {
-      if (!isDayOpened()) return;
+      if (!isDayOpened()) {
+        activateTab('days');
+        return;
+      }
       toggleImproved(s.id);
     });
     container.appendChild(div);
@@ -211,7 +200,6 @@ function toggleImproved(id) {
   renderSpheres();
 }
 
-// WHEEL
 function drawWheel() {
   const canvas = document.getElementById('wheel-canvas');
   const ctx = canvas.getContext('2d');
@@ -277,7 +265,18 @@ function drawWheel() {
   });
 }
 
-// DAYS
+function updateRitual() {
+  const ritual = document.getElementById('day-ritual');
+  const label = document.getElementById('ritual-label');
+  if (isDayOpened()) {
+    ritual.classList.add('done');
+    label.textContent = 'Сегодняшний день уже начат. Действуй.';
+  } else {
+    ritual.classList.remove('done');
+    label.textContent = 'Удерживай, чтобы начать сегодняшний день';
+  }
+}
+
 function renderDays() {
   const doneCount = getAutoDoneCount();
   const remaining = TOTAL_DAYS - doneCount;
@@ -289,6 +288,7 @@ function renderDays() {
   document.getElementById('days-done').textContent = doneCount;
   document.getElementById('days-pct-label').textContent = pct + '% • осталось ' + remaining;
   document.getElementById('days-progress-fill').style.width = pct + '%';
+  updateRitual();
 
   const container = document.getElementById('years-grid');
   container.innerHTML = '';
@@ -325,23 +325,75 @@ function renderDays() {
     row.appendChild(cells);
     container.appendChild(row);
   }
-
-  const btn = document.getElementById('close-day-btn');
-  btn.disabled = true;
-  btn.textContent = isDayOpened() ? '✅ День уже начат' : '⏳ Сначала начни новый день';
 }
 
-document.getElementById('start-day-btn').addEventListener('click', () => {
+const holdBtn = document.getElementById('start-day-hold');
+const holdFill = document.getElementById('start-day-fill');
+const holdText = document.getElementById('start-day-text');
+let holdTimer = null;
+let holdStartedAt = 0;
+let holdFrame = null;
+
+function resetHoldUi() {
+  holdFill.style.width = '0%';
+  holdText.textContent = 'Удерживай 3 секунды';
+}
+
+function finishHold() {
   openToday();
-  activateTab('spheres');
+  holdFill.style.width = '100%';
+  holdText.textContent = '✅ День начат';
+  setTimeout(() => {
+    activateTab('spheres');
+  }, 350);
+}
+
+function startHold() {
+  if (isDayOpened()) return;
+  holdStartedAt = Date.now();
+  holdText.textContent = 'Держи...';
+
+  const tick = () => {
+    const elapsed = Date.now() - holdStartedAt;
+    const pct = Math.min(100, (elapsed / HOLD_MS) * 100);
+    holdFill.style.width = pct + '%';
+    if (elapsed >= HOLD_MS) {
+      cancelHold();
+      finishHold();
+      return;
+    }
+    holdFrame = requestAnimationFrame(tick);
+  };
+
+  holdTimer = true;
+  holdFrame = requestAnimationFrame(tick);
+}
+
+function cancelHold() {
+  holdTimer = null;
+  if (holdFrame) cancelAnimationFrame(holdFrame);
+  holdFrame = null;
+}
+
+function stopHold() {
+  if (isDayOpened()) return;
+  if (!holdTimer) return;
+  cancelHold();
+  resetHoldUi();
+}
+
+['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
+  holdBtn.addEventListener(evt, e => {
+    e.preventDefault();
+    if (!holdTimer && !isDayOpened()) startHold();
+  }, { passive: false });
 });
 
-document.getElementById('close-day-btn').addEventListener('click', () => {
-  if (!isDayOpened()) return;
-  activateTab('spheres');
+['mouseup', 'mouseleave', 'touchend', 'touchcancel', 'pointerup', 'pointercancel'].forEach(evt => {
+  holdBtn.addEventListener(evt, stopHold);
 });
 
-// INIT
 ensureDefaults();
-updateGate();
 activateTab('days');
+renderSpheres();
+drawWheel();
