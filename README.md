@@ -1,26 +1,23 @@
-# Life RPG 🎮
+# Life RPG
 
-Личное приложение для геймификации жизни.
+Personal life gamification app — 8 spheres, balance wheel, habits, and a long-term day grid. The app works as a small PWA and stores user progress locally in the browser.
 
-## Функции
-- ⚔️ **8 сфер** — прокачка каждой сферы от 0 до 10
-- 🎯 **Колесо баланса** — визуализация прогресса по всем сферам
-- 📅 **10 000 дней** — сетка дней, каждый закрытый день закрашивается фиолетовым
+## What changed in this update
 
-## Сферы
-1. 💪 Здоровье
-2. 📈 Трейдинг
-3. 💼 Работа
-4. 💰 Деньги
-5. 🔥 Дисциплина
-6. 🪞 Внешность
-7. ❤️ Отношения
-8. 📚 Развитие
+- Fixed habit purpose storage and display.
+- Added stricter input validation for sphere scores.
+- Reworked day-opening logic: progress now depends on actual opened days history instead of auto-counting every day.
+- Improved streak calculation with explicit date sorting.
+- Added import/export of all data as JSON for backup and transfer between phone and PC.
+- Made timeline configuration editable through constants in code and aligned the description with the real day count.
 
-## Запуск
-Просто открой `index.html` в браузере.
+## Files
 
-**На iPhone:** открой в Safari → Share → Add to Home Screen → Open as Web App.
+- `index.html` — app structure
+- `style.css` — UI styles
+- `app.js` — app logic
+- `manifest.json` — PWA manifest
 
-## Данные
-Всё хранится локально в `localStorage` — без сервера, без регистрации.
+## Notes
+
+This version still uses browser storage, but now supports manual backup/restore through JSON export and import, which makes moving data between devices much safer.

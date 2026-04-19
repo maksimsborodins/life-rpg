@@ -37,6 +37,18 @@
       <button id="settings-habits-save" class="btn-primary">💾 Сохранить привычки</button>
 
       <div class="settings-divider"></div>
+
+      <div class="settings-section-title">Резервная копия</div>
+      <p class="settings-hint">Экспортируй JSON для переноса между телефоном и ПК или восстановления после очистки браузера.</p>
+      <div class="backup-actions">
+        <button id="export-data-btn" class="btn-primary">📤 Экспортировать данные</button>
+        <label class="btn-secondary file-import-label">
+          📥 Импортировать данные
+          <input id="import-data-input" type="file" accept="application/json">
+        </label>
+      </div>
+
+      <div class="settings-divider"></div>
       <div class="settings-section-title">Опасная зона</div>
       <button id="settings-reset" class="btn-danger">🗑️ Сбросить все данные</button>
     </div>
@@ -73,7 +85,7 @@
       <div class="days-hero-subtitle">Каждый день либо прожит осознанно, либо исчезает сам.</div>
     </div>
     <div class="days-meta">
-      <div class="days-meta-left"><strong id="days-done">0</strong> <span>/ 10 950 дней</span></div>
+      <div class="days-meta-left"><strong id="days-done">0</strong> <span id="days-total-label">/ 10 950 дней</span></div>
       <div class="days-meta-right" id="days-pct-label">0%</div>
     </div>
     <div class="days-progress-bar"><div id="days-progress-fill"></div></div>
