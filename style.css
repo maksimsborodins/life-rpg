@@ -102,12 +102,12 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
 /* Spheres List Modern */
 .spheres-grid { display: grid; grid-template-columns: 1fr; gap: var(--p16); }
 .sphere-item {
-  padding: var(--p8) var(--p16;
-  border-radius: var(--p20);
+    padding: var(--p16) var(--p20);
+  border-radius: var(var(--p16));
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255,255,255,0.03);
 }
-.sphere-name { font-weight: 700; font-size: 16px; margin-bottom: var(var(--p8)); display: block; }
+.sphere-name { font-weight: 700; font-size: 16px; margin-bottom: var(--p8); display: block; }
 .level-track { height: 8px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
 .level-fill { height: 100%; transition: width 0.8s ease; }
 
