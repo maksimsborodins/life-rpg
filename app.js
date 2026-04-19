@@ -13,7 +13,7 @@ const START_YEAR = 2026;
 const YEARS = 30;
 const DAYS_PER_YEAR = 365;
 const TOTAL_DAYS = YEARS * DAYS_PER_YEAR;
-const STORAGE_KEY = 'lifeRPG_Dashboard_v2';
+const STORAGE_KEY = 'lifeRPG_Dashboard_v3';
 
 let data = loadData();
 
@@ -24,7 +24,6 @@ function loadData() {
         if (!d.habits) d.habits = [];
         if (!d.openedDays) d.openedDays = [];
         
-        // Ensure habits have required properties
         d.habits = d.habits.map(h => ({
             ...h,
             done: h.done || false,
@@ -62,10 +61,12 @@ function init() {
     setupNavigation();
     setupEventListeners();
     
-    // Auto-reset habits on new day
     const today = new Date().toISOString().split('T')[0];
     if (data.lastVisit !== today) {
-        data.habits.forEach(h => h.done = false);
+        data.habits.forEach(h => {
+            if (!h.done) h.streak = 0; // Break streak if not done yesterday
+            h.done = false;
+        });
         data.lastVisit = today;
         saveData();
     }
@@ -134,14 +135,19 @@ function renderHabits() {
             <div class="checkbox"></div>
             <div class="habit-info">
                 <div class="h-name">${h.name}</div>
-                <div class="h-streak">🔥 Стрик: ${h.streak || 0}</div>
+                <div class="h-streak-badge">
+                    <span>🔥</span>
+                    <span>${h.streak || 0}</span>
+                </div>
             </div>
         `;
-        card.onclick = () => {
-            h.done = !h.done;
-            h.streak = (h.streak || 0) + (h.done ? 1 : -1);
-            if (h.streak < 0) h.streak = 0;
-            saveData();
+        card.onclick = (e) => {
+            if (e.target.closest('.checkbox') || !h.done) {
+                h.done = !h.done;
+                if (h.done) h.streak = (h.streak || 0) + 1;
+                else h.streak = Math.max(0, (h.streak || 0) - 1);
+                saveData();
+            }
         };
         ui.dashboardHabits.appendChild(card);
     });
@@ -150,22 +156,18 @@ function renderHabits() {
 function drawWheel() {
     if (!ui.canvas || ui.canvas.offsetParent === null) return;
     const ctx = ui.canvas.getContext('2d');
-    
-    // Force canvas size for sharpness
     const size = 400;
     ui.canvas.width = size;
     ui.canvas.height = size;
-    
     const cx = size / 2;
     const cy = size / 2;
-    const radius = 130; // Radius of the wheel itself
+    const radius = 130;
     const slices = data.spheres.length;
     const sliceAngle = (Math.PI * 2) / slices;
 
     ctx.clearRect(0, 0, size, size);
 
-    // Draw concentric circles (Grid)
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.lineWidth = 1;
     for (let i = 1; i <= 10; i++) {
         ctx.beginPath();
@@ -173,42 +175,32 @@ function drawWheel() {
         ctx.stroke();
     }
 
-    // Draw Axis and Labels
     data.spheres.forEach((s, i) => {
         const angle = i * sliceAngle - Math.PI / 2;
-        
-        // Axis lines
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
         ctx.moveTo(cx, cy);
         ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
         ctx.stroke();
         
-        // Labels
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        ctx.font = 'bold 12px Inter';
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.font = '600 12px Inter';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        
-        const labelDist = radius + 40;
+        const labelDist = radius + 35;
         const lx = cx + Math.cos(angle) * labelDist;
         const ly = cy + Math.sin(angle) * labelDist;
         
-        // Split names if they are too long (e.g. "Внутренний порядок")
-        if (s.name.length > 10) {
+        if (s.name.length > 10 && s.name.includes(' ')) {
             const parts = s.name.split(' ');
-            if (parts.length > 1) {
-                ctx.fillText(parts[0], lx, ly - 7);
-                ctx.fillText(parts.slice(1).join(' '), lx, ly + 7);
-            } else {
-                ctx.fillText(s.name, lx, ly);
-            }
+            ctx.fillText(parts[0], lx, ly - 7);
+            ctx.fillText(parts.slice(1).join(' '), lx, ly + 7);
         } else {
             ctx.fillText(s.name, lx, ly);
+        Part
         }
     });
 
-    // Draw the Data Shape
     ctx.beginPath();
     data.spheres.forEach((s, i) => {
         const angle = i * sliceAngle - Math.PI / 2;
@@ -219,28 +211,21 @@ function drawWheel() {
         else ctx.lineTo(x, y);
     });
     ctx.closePath();
-    
-    // Fill with gradient-like effect
-    ctx.fillStyle = 'rgba(192, 132, 252, 0.25)';
+    ctx.fillStyle = 'rgba(192, 132, 252, 0.2)';
     ctx.fill();
     ctx.strokeStyle = '#c084fc';
     ctx.lineWidth = 3;
-    ctx.lineJoin = 'round';
     ctx.stroke();
 
-    // Draw Points
     data.spheres.forEach((s, i) => {
         const angle = i * sliceAngle - Math.PI / 2;
         const r = (radius / 10) * s.score;
-        const px = cx + Math.cos(angle) * r;
-        const py = cy + Math.sin(angle) * r;
-        
         ctx.beginPath();
-        ctx.arc(px, py, 5, 0, Math.PI * 2);
+        ctx.arc(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r, 4, 0, Math.PI * 2);
         ctx.fillStyle = s.color;
         ctx.fill();
         ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
     });
 }
@@ -254,10 +239,7 @@ function setupNavigation() {
             document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
             const targetPage = document.getElementById(`page-${pageId}`);
             if (targetPage) targetPage.classList.remove('hidden');
-            
-            if (pageId === 'analytics') {
-                setTimeout(drawWheel, 100);
-            }
+            if (pageId === 'analytics') setTimeout(drawWheel, 50);
         };
     });
 }
@@ -278,8 +260,6 @@ function setupEventListeners() {
             data.openedDays.push(today);
             saveData();
             alert('День начат!');
-        } else {
-            alert('День уже начат!');
         }
     };
     
