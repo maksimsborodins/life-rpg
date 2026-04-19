@@ -32,6 +32,40 @@ function diffDays(from, to) {
   return Math.floor((b - a) / 86400000);
 }
 
+function shiftDate(dateStr, days) {
+  const date = new Date(dateStr + 'T00:00:00');
+  date.setDate(date.getDate() + days);
+  return date.toLocaleDateString('en-CA');
+}
+
+function getHabitStreak(habitId) {
+  const habitDone = getHabitDone();
+  const dates = Object.entries(habitDone)
+    .filter(([key, value]) => key === habitId && !!value)
+    .map(([, value]) => value)
+    .sort();
+
+  if (dates.length === 0) return 0;
+
+  const uniqueDates = [...new Set(dates)];
+  const today = getTodayStr();
+  const yesterday = shiftDate(today, -1);
+  let current = uniqueDates[uniqueDates.length - 1];
+
+  if (current !== today && current !== yesterday) return 0;
+
+  let streak = 1;
+  for (let i = uniqueDates.length - 2; i >= 0; i--) {
+    if (shiftDate(current, -1) === uniqueDates[i]) {
+      streak++;
+      current = uniqueDates[i];
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
 function getAutoDoneCount() {
   const days = diffDays(START_DATE, getTodayStr()) + 1;
   return Math.max(0, Math.min(TOTAL_DAYS, days));
@@ -84,7 +118,6 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
   });
 });
 
-// SETTINGS
 const overlay = document.getElementById('settings-overlay');
 document.getElementById('open-settings').addEventListener('click', () => {
   renderSettingsSpheres();
@@ -138,7 +171,6 @@ document.getElementById('settings-save').addEventListener('click', () => {
   setTimeout(() => btn.textContent = '💾 Сохранить сферы', 1500);
 });
 
-// HABITS SETTINGS
 function renderSettingsHabits() {
   const habits = getHabits();
   const container = document.getElementById('settings-habits-list');
@@ -166,7 +198,6 @@ document.getElementById('add-habit-btn').addEventListener('click', () => {
   if (!val) return;
   const d = loadData();
   if (!d.habits) d.habits = [];
-  // detect leading emoji
   const emojiMatch = val.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
   const emoji = emojiMatch ? emojiMatch[0] : '🔹';
   const name = emojiMatch ? val.slice(emoji.length).trim() : val;
@@ -195,7 +226,6 @@ document.getElementById('settings-reset').addEventListener('click', () => {
   }
 });
 
-// SPHERES
 function renderSpheres() {
   const spheres = getSpheres();
   const scores = getScores();
@@ -241,7 +271,6 @@ function toggleImproved(id) {
   renderSpheres();
 }
 
-// HABITS
 function renderHabits() {
   const habits = getHabits();
   const today = getTodayStr();
@@ -258,12 +287,17 @@ function renderHabits() {
 
   habits.forEach(h => {
     const done = habitDone[h.id] === today;
+    const streak = getHabitStreak(h.id);
     const div = document.createElement('div');
     div.className = 'habit-item' + (done ? ' done' : '');
     div.innerHTML = `
       <div class="habit-check">${done ? '✅' : '⬜'}</div>
       <div class="habit-info">
         <span class="habit-name">${h.emoji} ${h.name}</span>
+        <div class="habit-meta">
+          <span class="habit-streak">🔥 ${streak} дн.</span>
+          ${done ? '<span class="habit-status">Сегодня сделано</span>' : '<span class="habit-status habit-status-muted">Ещё не отмечено</span>'}
+        </div>
       </div>
     `;
     div.addEventListener('click', () => {
@@ -279,7 +313,6 @@ function renderHabits() {
   });
 }
 
-// WHEEL
 function drawWheel() {
   const canvas = document.getElementById('wheel-canvas');
   const ctx = canvas.getContext('2d');
@@ -336,14 +369,12 @@ function drawWheel() {
   });
 }
 
-// RITUAL
 function updateRitual() {
   const ritual = document.getElementById('day-ritual');
   if (isDayOpened()) ritual.classList.add('done');
   else ritual.classList.remove('done');
 }
 
-// DAYS
 function renderDays() {
   const doneCount = getAutoDoneCount();
   const remaining = TOTAL_DAYS - doneCount;
@@ -395,7 +426,6 @@ function renderDays() {
   }
 }
 
-// HOLD BUTTON
 const holdBtn = document.getElementById('start-day-hold');
 const holdFill = document.getElementById('start-day-fill');
 const holdText = document.getElementById('start-day-text');
