@@ -19,7 +19,7 @@ const STORAGE_KEY = 'lifeRPG';
 
 function loadData() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
   } catch {
     return {};
   }
@@ -34,678 +34,428 @@ function getTodayStr() {
 }
 
 function sortDateStrings(arr) {
-  return [...arr].sort((a, b) => new Date(a + 'T00:00:00') - new Date(b + 'T00:00:00'));
+  return [...arr].sort((a, b) => new Date(a) - new Date(b));
 }
 
-function clampScore(value, fallback = 0) {
-  const num = Number(value);
-  if (!Number.isFinite(num)) return fallback;
-  return Math.min(10, Math.max(0, Math.round(num)));
+function ensureDefaults(d) {
+  if (!d.spheres || d.spheres.length === 0) d.spheres = JSON.parse(JSON.stringify(DEFAULT_SPHERES));
+  if (!d.habits) d.habits = [];
+  if (!d.openedDays) d.openedDays = [];
+  if (!d.sphereProgress) d.sphereProgress = {};
+  if (!d.habitHistory) d.habitHistory = {};
+  return d;
 }
 
-function normalizeOpenedDays(list) {
-  if (!Array.isArray(list)) return [];
-  return sortDateStrings([...new Set(list.filter(v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)))]);
+let data = ensureDefaults(loadData());
+
+/* Navigation Logic */
+const navButtons = document.querySelectorAll('.nav-btn[data-tab]');
+const tabs = document.querySelectorAll('.tab');
+
+navButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    navButtons.forEach(b => b.classList.toggle('active', b === btn));
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === target));
+    if (target === 'spheres') drawWheel();
+  });
+});
+
+/* Settings Logic */
+const settingsOverlay = document.getElementById('settings-overlay');
+const openSettingsBtn = document.getElementById('open-settings');
+const closeSettingsBtn = document.getElementById('settings-close');
+
+openSettingsBtn.addEventListener('click', () => {
+  renderSettings();
+  settingsOverlay.classList.remove('hidden');
+});
+
+closeSettingsBtn.addEventListener('click', () => {
+  settingsOverlay.classList.add('hidden');
+});
+
+function renderSettings() {
+  const sList = document.getElementById('settings-spheres-list');
+  sList.innerHTML = '';
+  data.spheres.forEach((s, idx) => {
+    const div = document.createElement('div');
+    div.className = 'settings-sphere-row';
+    div.innerHTML = `
+      <input type="text" class="settings-emoji" value="${s.name.split(' ')[0]}" data-idx="${idx}" data-type="emoji">
+      <input type="text" class="settings-name" value="${s.name.split(' ').slice(1).join(' ')}" data-idx="${idx}" data-type="name">
+      <input type="number" class="settings-score-input" value="${s.score || 0}" min="0" max="10" data-idx="${idx}">
+    `;
+    sList.appendChild(div);
+  });
+
+  const hList = document.getElementById('settings-habits-list');
+  hList.innerHTML = '';
+  data.habits.forEach((h, idx) => {
+    const div = document.createElement('div');
+    div.className = 'habit-item';
+    div.style.cursor = 'default';
+    div.innerHTML = `
+      <div class="habit-info">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-purpose">${h.purpose || ''}</div>
+      </div>
+      <button class="btn-remove" onclick="removeHabit(${idx})">🗑️</button>
+    `;
+    hList.appendChild(div);
+  });
 }
 
-function getSpheres() {
-  const d = loadData();
-  return d.spheres || DEFAULT_SPHERES;
-}
+window.removeHabit = (idx) => {
+  data.habits.splice(idx, 1);
+  saveData(data);
+  renderSettings();
+  renderHabits();
+};
 
-function getScores() {
-  return loadData().scores || {};
-}
+document.getElementById('add-habit-btn').addEventListener('click', () => {
+  const nameInput = document.getElementById('new-habit-input');
+  const purposeInput = document.getElementById('new-habit-purpose');
+  if (!nameInput.value.trim()) return;
+  
+  data.habits.push({
+    id: 'h_' + Date.now(),
+    name: nameInput.value.trim(),
+    purpose: purposeInput.value.trim()
+  });
+  
+  nameInput.value = '';
+  purposeInput.value = '';
+  saveData(data);
+  renderSettings();
+  renderHabits();
+});
 
-function getTodayImproved() {
-  const d = loadData();
-  return d.improved || {};
-}
+document.getElementById('settings-save').addEventListener('click', () => {
+  const rows = document.querySelectorAll('.settings-sphere-row');
+  rows.forEach(row => {
+    const emoji = row.querySelector('.settings-emoji').value;
+    const name = row.querySelector('.settings-name').value;
+    const score = parseInt(row.querySelector('.settings-score-input').value) || 0;
+    const idx = row.querySelector('.settings-emoji').dataset.idx;
+    data.spheres[idx].name = `${emoji} ${name}`;
+    data.spheres[idx].score = Math.max(0, Math.min(10, score));
+  });
+  saveData(data);
+  renderSpheres();
+  drawWheel();
+  alert('Сферы сохранены');
+});
 
-function getOpenedDays() {
-  return normalizeOpenedDays(loadData().openedDays || []);
-}
+document.getElementById('settings-habits-save').addEventListener('click', () => {
+  saveData(data);
+  alert('Привычки сохранены');
+});
 
-function getHabits() {
-  return loadData().habits || [];
-}
-
-function getHabitDone() {
-  return loadData().habitDone || {};
-}
-
-function diffDays(from, to) {
-  const a = new Date(from + 'T00:00:00');
-  const b = new Date(to + 'T00:00:00');
-  return Math.floor((b - a) / 86400000);
-}
-
-function shiftDate(dateStr, days) {
-  const date = new Date(dateStr + 'T00:00:00');
-  date.setDate(date.getDate() + days);
-  return date.toLocaleDateString('en-CA');
-}
-
-function getHabitStreak(habitId) {
-  const d = loadData();
-  const history = (d.habitHistory && d.habitHistory[habitId]) || [];
-  if (history.length === 0) return 0;
-  const unique = sortDateStrings([...new Set(history)]);
+/* Spheres Logic */
+function renderSpheres() {
+  const list = document.getElementById('spheres-list');
+  list.innerHTML = '';
   const today = getTodayStr();
-  const yesterday = shiftDate(today, -1);
-  let last = unique[unique.length - 1];
-  if (last !== today && last !== yesterday) return 0;
-  let streak = 1;
-  for (let i = unique.length - 2; i >= 0; i--) {
-    if (shiftDate(last, -1) === unique[i]) {
+  const improvedToday = data.sphereProgress[today] || [];
+
+  data.spheres.forEach(s => {
+    const isImproved = improvedToday.includes(s.id);
+    const div = document.createElement('div');
+    div.className = `sphere-item ${isImproved ? 'improved' : ''}`;
+    
+    let bars = '';
+    for (let i = 1; i <= 10; i++) {
+      const active = i <= (s.score || 0);
+      bars += `<div class="bar-seg" style="background: ${active ? s.color : '#1e1e30'}"></div>`;
+    }
+
+    div.innerHTML = `
+      <div class="sphere-row">
+        <div class="sphere-name">${s.name}</div>
+        <div class="bar-track">${bars}</div>
+        <div class="sphere-score">${s.score || 0}</div>
+      </div>
+    `;
+    
+    div.onclick = () => toggleSphere(s.id);
+    list.appendChild(div);
+  });
+}
+
+function toggleSphere(id) {
+  const today = getTodayStr();
+  if (!data.sphereProgress[today]) data.sphereProgress[today] = [];
+  
+  const idx = data.sphereProgress[today].indexOf(id);
+  if (idx > -1) {
+    data.sphereProgress[today].splice(idx, 1);
+  } else {
+    data.sphereProgress[today].push(id);
+  }
+  
+  saveData(data);
+  renderSpheres();
+  drawWheel();
+}
+
+function drawWheel() {
+  const canvas = document.getElementById('wheel-canvas');
+  const ctx = canvas.getContext('2d');
+  const size = Math.min(window.innerWidth - 64, 400);
+  canvas.width = size * 2;
+  canvas.height = size * 2;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  ctx.scale(2, 2);
+
+  const center = size / 2;
+  const radius = (size / 2) - 20;
+  const step = (Math.PI * 2) / data.spheres.length;
+
+  ctx.clearRect(0, 0, size, size);
+  
+  // Background grid
+  ctx.strokeStyle = '#1e1e2e';
+  ctx.lineWidth = 1;
+  for (let i = 1; i <= 10; i++) {
+    ctx.beginPath();
+    ctx.arc(center, center, (radius / 10) * i, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Axes
+  data.spheres.forEach((s, i) => {
+    const angle = i * step - Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(center, center);
+    ctx.lineTo(center + Math.cos(angle) * radius, center + Math.sin(angle) * radius);
+    ctx.stroke();
+  });
+
+  // Data shape
+  ctx.beginPath();
+  data.spheres.forEach((s, i) => {
+    const angle = i * step - Math.PI / 2;
+    const r = (radius / 10) * (s.score || 0);
+    const x = center + Math.cos(angle) * r;
+    const y = center + Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(192, 132, 252, 0.3)';
+  ctx.fill();
+  ctx.strokeStyle = '#c084fc';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Points
+  data.spheres.forEach((s, i) => {
+    const angle = i * step - Math.PI / 2;
+    const r = (radius / 10) * (s.score || 0);
+    ctx.fillStyle = s.color;
+    ctx.beginPath();
+    ctx.arc(center + Math.cos(angle) * r, center + Math.sin(angle) * r, 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+/* Habits Logic */
+function renderHabits() {
+  const container = document.getElementById('habits-container');
+  container.innerHTML = '';
+  
+  if (data.habits.length === 0) {
+    container.innerHTML = '<div class="habits-empty">Привычки не добавлены. Открой настройки ⚙️</div>';
+    return;
+  }
+
+  const today = getTodayStr();
+  const doneToday = data.habitHistory[today] || [];
+
+  data.habits.forEach(h => {
+    const isDone = doneToday.includes(h.id);
+    const streak = calculateStreak(h.id);
+    
+    const div = document.createElement('div');
+    div.className = `habit-item ${isDone ? 'done' : ''}`;
+    div.innerHTML = `
+      <div class="habit-check">${isDone ? '✅' : '⬜'}</div>
+      <div class="habit-info">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-purpose">${h.purpose || ''}</div>
+        <div class="habit-meta">
+          ${streak > 0 ? `<div class="habit-streak">🔥 ${streak}</div>` : ''}
+        </div>
+      </div>
+    `;
+    div.onclick = () => toggleHabit(h.id);
+    container.appendChild(div);
+  });
+}
+
+function toggleHabit(id) {
+  const today = getTodayStr();
+  if (!data.habitHistory[today]) data.habitHistory[today] = [];
+  
+  const idx = data.habitHistory[today].indexOf(id);
+  if (idx > -1) {
+    data.habitHistory[today].splice(idx, 1);
+  } else {
+    data.habitHistory[today].push(id);
+  }
+  
+  saveData(data);
+  renderHabits();
+}
+
+function calculateStreak(id) {
+  let streak = 0;
+  let curr = new Date();
+  
+  while (true) {
+    const dStr = curr.toLocaleDateString('en-CA');
+    const done = (data.habitHistory[dStr] || []).includes(id);
+    if (done) {
       streak++;
-      last = unique[i];
+      curr.setDate(curr.getDate() - 1);
     } else {
+      // If not done today, don't break yet, check yesterday
+      if (dStr === getTodayStr()) {
+        curr.setDate(curr.getDate() - 1);
+        continue;
+      }
       break;
     }
   }
   return streak;
 }
 
-function getDoneCount() {
-  const today = getTodayStr();
-  return getOpenedDays().filter(day => day <= today).length;
-}
-
-function getCurrentDayIndex() {
-  return getDoneCount();
-}
-
-function isDayOpened() {
-  return getOpenedDays().includes(getTodayStr());
-}
-
-function openToday() {
-  const d = loadData();
-  const today = getTodayStr();
-  d.openedDays = normalizeOpenedDays([...(d.openedDays || []), today]);
-  saveData(d);
-  updateRitual();
-  renderDays();
-}
-
-function ensureDefaults() {
-  const d = loadData();
-  let changed = false;
-
-  if (!d.seeded) {
-    d.seeded = true;
-    changed = true;
-  }
-
-  if (!d.spheres) {
-    d.spheres = DEFAULT_SPHERES;
-    changed = true;
-  }
-
-  if (!d.scores) {
-    d.scores = {};
-    DEFAULT_SPHERES.forEach(s => d.scores[s.id] = 5);
-    changed = true;
-  } else {
-    DEFAULT_SPHERES.forEach(s => {
-      d.scores[s.id] = clampScore(d.scores[s.id] ?? 5, 5);
-    });
-    changed = true;
-  }
-
-  if (!d.improved) {
-    d.improved = {};
-    changed = true;
-  }
-
-  if (!d.habits) {
-    d.habits = [];
-    changed = true;
-  }
-
-  d.habits = d.habits.map(h => ({
-    id: h.id || 'h_' + Date.now() + Math.random().toString(16).slice(2),
-    emoji: h.emoji || '🔹',
-    name: (h.name || '').trim(),
-    purpose: (h.purpose || '').trim(),
-  })).filter(h => h.name);
-  changed = true;
-
-  if (!d.habitDone) {
-    d.habitDone = {};
-    changed = true;
-  }
-
-  if (!d.habitHistory) {
-    d.habitHistory = {};
-    changed = true;
-  }
-
-  Object.keys(d.habitHistory).forEach(id => {
-    d.habitHistory[id] = normalizeOpenedDays(d.habitHistory[id]);
-  });
-  changed = true;
-
-  if (!d.openedDays && d.openedDay) {
-    d.openedDays = normalizeOpenedDays([d.openedDay]);
-    delete d.openedDay;
-    changed = true;
-  }
-
-  if (!d.openedDays) {
-    d.openedDays = [];
-    changed = true;
-  } else {
-    d.openedDays = normalizeOpenedDays(d.openedDays);
-    changed = true;
-  }
-
-  if (changed) saveData(d);
-}
-
-function activateTab(tabName) {
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  const btn = document.querySelector(`.nav-btn[data-tab="${tabName}"]`);
-  const tab = document.getElementById('tab-' + tabName);
-  if (btn) btn.classList.add('active');
-  if (tab) tab.classList.add('active');
-  if (tabName === 'spheres') {
-    renderSpheres();
-    drawWheel();
-  }
-  if (tabName === 'habits') renderHabits();
-  if (tabName === 'days') renderDays();
-}
-
-document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if ((btn.dataset.tab === 'spheres' || btn.dataset.tab === 'habits') && !isDayOpened()) {
-      activateTab('days');
-      return;
-    }
-    activateTab(btn.dataset.tab);
-  });
-});
-
-const overlay = document.getElementById('settings-overlay');
-document.getElementById('open-settings').addEventListener('click', () => {
-  renderSettingsSpheres();
-  renderSettingsHabits();
-  overlay.classList.remove('hidden');
-});
-document.getElementById('settings-close').addEventListener('click', () => overlay.classList.add('hidden'));
-overlay.addEventListener('click', e => {
-  if (e.target === overlay) overlay.classList.add('hidden');
-});
-
-function renderSettingsSpheres() {
-  const spheres = getSpheres();
-  const scores = getScores();
-  const container = document.getElementById('settings-spheres-list');
-  container.innerHTML = '';
-  spheres.forEach((s, i) => {
-    const val = clampScore(scores[s.id] ?? 5, 5);
+/* Days & Grid Logic */
+function renderGrid() {
+  const grid = document.getElementById('years-grid');
+  grid.innerHTML = '';
+  
+  for (let y = 0; y < YEARS; y++) {
     const row = document.createElement('div');
-    row.className = 'settings-sphere-row';
-    row.innerHTML = `
-      <input class="settings-emoji" type="text" maxlength="4" value="${s.name.split(' ')[0]}" data-i="${i}">
-      <input class="settings-name" type="text" value="${s.name.split(' ').slice(1).join(' ')}" data-i="${i}">
-      <input class="settings-score-input" type="number" min="0" max="10" value="${val}" data-id="${s.id}">
-      <input class="settings-color" type="color" value="${s.color}" data-i="${i}">
-    `;
-    container.appendChild(row);
-  });
-}
-
-document.getElementById('settings-save').addEventListener('click', () => {
-  const d = loadData();
-  const emojis = document.querySelectorAll('.settings-emoji');
-  const names = document.querySelectorAll('.settings-name');
-  const colors = document.querySelectorAll('.settings-color');
-  const scoreInputs = document.querySelectorAll('.settings-score-input');
-  const spheres = getSpheres();
-
-  spheres.forEach((s, i) => {
-    const emoji = emojis[i].value.trim() || '⭐';
-    const baseName = names[i].value.trim() || s.name.split(' ').slice(1).join(' ') || 'Без названия';
-    s.name = `${emoji} ${baseName}`;
-    s.color = colors[i].value;
-  });
-
-  d.spheres = spheres;
-  d.scores = d.scores || {};
-  scoreInputs.forEach(inp => {
-    d.scores[inp.dataset.id] = clampScore(inp.value, 0);
-    inp.value = d.scores[inp.dataset.id];
-  });
-
-  saveData(d);
-  overlay.classList.add('hidden');
-  renderSpheres();
-  drawWheel();
-  const btn = document.getElementById('settings-save');
-  btn.textContent = '✅ Сохранено!';
-  setTimeout(() => btn.textContent = '💾 Сохранить сферы', 1500);
-});
-
-function renderSettingsHabits() {
-  const habits = getHabits();
-  const container = document.getElementById('settings-habits-list');
-  container.innerHTML = '';
-
-  habits.forEach((h, i) => {
-    const row = document.createElement('div');
-    row.className = 'settings-habit-row';
-    row.innerHTML = `
-      <div class="settings-habit-texts">
-        <span class="settings-habit-name">${h.emoji} ${h.name}</span>
-        ${h.purpose ? `<div class="settings-habit-purpose-text">${h.purpose}</div>` : ''}
-      </div>
-      <button class="btn-remove" data-i="${i}">✕</button>
-    `;
-
-    row.querySelector('.btn-remove').addEventListener('click', () => {
-      const d = loadData();
-      const removed = d.habits[i];
-      d.habits.splice(i, 1);
-      if (removed) {
-        if (d.habitDone) delete d.habitDone[removed.id];
-        if (d.habitHistory) delete d.habitHistory[removed.id];
+    row.className = 'year-row';
+    const yearNum = START_YEAR + y;
+    
+    row.innerHTML = `<div class="year-label">${yearNum}</div>`;
+    
+    const cells = document.createElement('div');
+    cells.className = 'year-cells';
+    
+    // Simplification for mobile performance: only show current year details, others are summaries
+    const isCurrentYear = new Date().getFullYear() === yearNum;
+    
+    if (isCurrentYear) {
+      for (let d = 0; d < 365; d++) {
+        const cell = document.createElement('div');
+        cell.className = 'day-cell';
+        // Logic to check if day is proproced would go here
+        cells.appendChild(cell);
       }
-      saveData(d);
-      renderSettingsHabits();
-      renderHabits();
-    });
-
-    container.appendChild(row);
-  });
+    } else {
+      // Placeholder for other years
+      cells.innerHTML = '<div style="height: 4px; background: #1a1a2e; width: 100%; border-radius: 2px;"></div>';
+    }
+    
+    row.appendChild(cells);
+    grid.appendChild(row);
+  }
+  updateDaysUI();
 }
 
-document.getElementById('add-habit-btn').addEventListener('click', () => {
-  const input = document.getElementById('new-habit-input');
-  const purposeInput = document.getElementById('new-habit-purpose');
-  const val = input.value.trim();
-  const purpose = purposeInput.value.trim();
-  if (!val) return;
+function updateDaysUI() {
+  const count = data.openedDays.length;
+  document.getElementById('days-count').innerText = count;
+  const pct = ((count / TOTAL_DAYS) * 100).toFixed(2);
+  document.getElementById('days-percent').innerText = pct;
+}
 
-  const d = loadData();
-  if (!d.habits) d.habits = [];
+/* Day Ritual Logic */
+let holdTimer;
+const holdBtn = document.getElementById('start-day-hold');
+const holdFill = document.getElementById('start-day-fill');
 
-  const emojiMatch = val.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
-  const emoji = emojiMatch ? emojiMatch[0] : '🔹';
-  const name = emojiMatch ? val.slice(emoji.length).trim() : val;
-
-  d.habits.push({
-    id: 'h_' + Date.now(),
-    emoji,
-    name,
-    purpose,
-  });
-
-  saveData(d);
-  input.value = '';
-  purposeInput.value = '';
-  renderSettingsHabits();
-});
-
-document.getElementById('new-habit-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('add-habit-btn').click();
-});
-
-document.getElementById('settings-habits-save').addEventListener('click', () => {
-  overlay.classList.add('hidden');
-  renderHabits();
-  const btn = document.getElementById('settings-habits-save');
-  btn.textContent = '✅ Сохранено!';
-  setTimeout(() => btn.textContent = '💾 Сохранить привычки', 1500);
-});
-
-document.getElementById('settings-reset').addEventListener('click', () => {
-  if (confirm('Точно? Все данные будут удалены.')) {
-    localStorage.removeItem(STORAGE_KEY);
-    location.reload();
+function startHold(e) {
+  e.preventDefault();
+  let start = null;
+  function animate(timestamp) {
+    if (!start) start = timestamp;
+    const progress = timestamp - start;
+    const pct = Math.min(progress / HOLD_MS, 1);
+    holdFill.style.width = (pct * 100) + '%';
+    
+    if (pct < 1) {
+      holdTimer = requestAnimationFrame(animate);
+    } else {
+      finishDayStart();
+    }
   }
-});
+  holdTimer = requestAnimationFrame(animate);
+}
 
-function exportData() {
-  const data = loadData();
+function cancelHold() {
+  cancelAnimationFrame(holdTimer);
+  holdFill.style.width = '0%';
+}
+
+function finishDayStart() {
+  const today = getTodayStr();
+  if (!data.openedDays.includes(today)) {
+    data.openedDays.push(today);
+    saveData(data);
+    updateDaysUI();
+    alert('Новый день начат! Удачи сегодня.');
+  }
+  cancelHold();
+}
+
+holdBtn.addEventListener('mousedown', startHold);
+holdBtn.addEventListener('touchstart', startHold);
+window.addEventListener('mouseup', cancelHold);
+window.addEventListener('touchend', cancelHold);
+
+/* Backup Logic */
+document.getElementById('export-data-btn').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = `life-rpg-backup-${getTodayStr()}.json`;
-  document.body.appendChild(a);
   a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-async function importData(file) {
-  if (!file) return;
-  const text = await file.text();
-  let parsed;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    alert('Не удалось прочитать JSON-файл');
-    return;
-  }
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-  ensureDefaults();
-  renderSettingsSpheres();
-  renderSettingsHabits();
-  renderSpheres();
-  renderHabits();
-  renderDays();
-  drawWheel();
-  alert('Данные импортированы');
-}
-
-document.getElementById('export-data-btn').addEventListener('click', exportData);
-document.getElementById('import-data-input').addEventListener('change', e => {
-  importData(e.target.files[0]);
-  e.target.value = '';
 });
 
-function renderSpheres() {
-  const spheres = getSpheres();
-  const scores = getScores();
-  const today = getTodayStr();
-  const improved = getTodayImproved();
-  const container = document.getElementById('spheres-list');
-  container.innerHTML = '';
-
-  spheres.forEach(s => {
-    const val = clampScore(scores[s.id] ?? 5, 5);
-    const isImproved = improved[s.id] === today;
-    const bars = Array.from({ length: 10 }, (_, i) => {
-      const filled = i < val;
-      return `<div class="bar-seg ${filled ? 'filled' : ''}" style="${filled ? 'background:' + s.color : ''}"></div>`;
-    }).join('');
-
-    const div = document.createElement('div');
-    div.className = 'sphere-item' + (isImproved ? ' improved' : '');
-    div.innerHTML = `
-      <div class="sphere-row">
-        <span class="sphere-name">${s.name}</span>
-        <div class="sphere-right">
-          <div class="bar-track">${bars}</div>
-          <span class="sphere-score" style="color:${s.color}">${val}</span>
-          ${isImproved ? '<span class="improved-badge">✨</span>' : ''}
-        </div>
-      </div>`;
-
-    div.addEventListener('click', () => {
-      if (!isDayOpened()) {
-        activateTab('days');
-        return;
+document.getElementById('import-data-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (confirm('Это перезапишет текущие данные. Продолжить?')) {
+        data = ensureDefaults(imported);
+        saveData(data);
+        location.reload();
       }
-      toggleImproved(s.id);
-    });
-
-    container.appendChild(div);
-  });
-}
-
-function toggleImproved(id) {
-  const d = loadData();
-  const today = getTodayStr();
-  if (!d.improved) d.improved = {};
-  if (d.improved[id] === today) delete d.improved[id];
-  else d.improved[id] = today;
-  saveData(d);
-  renderSpheres();
-}
-
-function renderHabits() {
-  const habits = getHabits();
-  const today = getTodayStr();
-  const habitDone = getHabitDone();
-  const container = document.getElementById('habits-list');
-  const empty = document.getElementById('habits-empty');
-  container.innerHTML = '';
-
-  if (habits.length === 0) {
-    empty.classList.remove('hidden');
-    return;
-  }
-
-  empty.classList.add('hidden');
-
-  habits.forEach(h => {
-    const done = habitDone[h.id] === today;
-    const streak = getHabitStreak(h.id);
-    const streakLabel = streak >= 2 ? `🔥 ${streak} дн.` : streak === 1 ? '🔥 1 дн.' : '—';
-    const div = document.createElement('div');
-    div.className = 'habit-item' + (done ? ' done' : '');
-    div.innerHTML = `
-      <div class="habit-check">${done ? '✅' : '⬜'}</div>
-      <div class="habit-info">
-        <span class="habit-name">${h.emoji} ${h.name}</span>
-        ${h.purpose ? `<div class="habit-purpose">${h.purpose}</div>` : ''}
-        <div class="habit-meta">
-          <span class="habit-streak ${streak > 0 ? 'active' : ''}">${streakLabel}</span>
-          <span class="habit-status ${done ? '' : 'habit-status-muted'}">${done ? 'Сегодня сделано' : 'Ещё не отмечено'}</span>
-        </div>
-      </div>`;
-
-    div.addEventListener('click', () => {
-      if (!isDayOpened()) {
-        activateTab('days');
-        return;
-      }
-
-      const d = loadData();
-      if (!d.habitDone) d.habitDone = {};
-      if (!d.habitHistory) d.habitHistory = {};
-      if (!d.habitHistory[h.id]) d.habitHistory[h.id] = [];
-
-      if (d.habitDone[h.id] === today) {
-        delete d.habitDone[h.id];
-        d.habitHistory[h.id] = d.habitHistory[h.id].filter(dt => dt !== today);
-      } else {
-        d.habitDone[h.id] = today;
-        if (!d.habitHistory[h.id].includes(today)) d.habitHistory[h.id].push(today);
-      }
-
-      d.habitHistory[h.id] = normalizeOpenedDays(d.habitHistory[h.id]);
-      saveData(d);
-      renderHabits();
-    });
-
-    container.appendChild(div);
-  });
-}
-
-function drawWheel() {
-  const canvas = document.getElementById('wheel-canvas');
-  const ctx = canvas.getContext('2d');
-  const spheres = getSpheres();
-  const scores = getScores();
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
-  const R = cx - 30;
-  const n = spheres.length;
-  const step = (Math.PI * 2) / n;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  for (let i = 10; i >= 1; i--) {
-    ctx.beginPath();
-    for (let j = 0; j < n; j++) {
-      const angle = step * j - Math.PI / 2;
-      const r = (R * i) / 10;
-      const x = cx + r * Math.cos(angle);
-      const y = cy + r * Math.sin(angle);
-      j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    } catch {
+      alert('Ошибка при чтении файла');
     }
-    ctx.closePath();
-    ctx.strokeStyle = i % 2 === 0 ? '#252538' : '#1a1a2e';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-
-  for (let j = 0; j < n; j++) {
-    const angle = step * j - Math.PI / 2;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
-    ctx.strokeStyle = '#2a2a3e';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-
-  spheres.forEach((s, j) => {
-    const val = clampScore(scores[s.id] ?? 5, 5);
-    const angleStart = step * j - Math.PI / 2;
-    const angleEnd = step * (j + 1) - Math.PI / 2;
-    const r = (R * val) / 10;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, angleStart, angleEnd);
-    ctx.closePath();
-    ctx.fillStyle = s.color + '55';
-    ctx.fill();
-    ctx.strokeStyle = s.color;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  });
-
-  spheres.forEach((s, j) => {
-    const angle = step * j + step / 2 - Math.PI / 2;
-    const r = R + 18;
-    ctx.font = '11px Segoe UI';
-    ctx.fillStyle = s.color;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(s.name.split(' ')[0], cx + r * Math.cos(angle), cy + r * Math.sin(angle));
-  });
-}
-
-function updateRitual() {
-  const ritual = document.getElementById('day-ritual');
-  if (isDayOpened()) ritual.classList.add('done');
-  else ritual.classList.remove('done');
-}
-
-function renderDays() {
-  const doneCount = getDoneCount();
-  const remaining = Math.max(0, TOTAL_DAYS - doneCount);
-  const pct = ((doneCount / TOTAL_DAYS) * 100).toFixed(1);
-  const currentYear = new Date().getFullYear();
-  const currentYearStartIdx = (currentYear - START_YEAR) * DAYS_PER_YEAR;
-  const passedInCurrentYear = Math.max(0, Math.min(DAYS_PER_YEAR, doneCount - currentYearStartIdx));
-
-  document.getElementById('days-done').textContent = doneCount;
-  document.getElementById('days-total-label').textContent = `/ ${TOTAL_DAYS.toLocaleString('ru-RU')} дней`;
-  document.getElementById('days-pct-label').textContent = pct + '% • осталось ' + remaining;
-  document.getElementById('days-progress-fill').style.width = pct + '%';
-  updateRitual();
-
-  const container = document.getElementById('years-grid');
-  container.innerHTML = '';
-
-  for (let y = 0; y < YEARS; y++) {
-    const year = START_YEAR + y;
-    const isCurrent = year === currentYear;
-    const row = document.createElement('div');
-    row.className = 'year-row' + (isCurrent ? ' current-year' : '');
-
-    const label = document.createElement('div');
-    label.className = 'year-label';
-    label.textContent = year;
-    row.appendChild(label);
-
-    if (isCurrent) {
-      const meta = document.createElement('div');
-      meta.className = 'year-current-meta';
-      meta.textContent = passedInCurrentYear + ' / ' + DAYS_PER_YEAR;
-      row.appendChild(meta);
-    }
-
-    const cells = document.createElement('div');
-    cells.className = 'year-cells';
-    for (let d = 0; d < DAYS_PER_YEAR; d++) {
-      const idx = y * DAYS_PER_YEAR + d;
-      const cell = document.createElement('div');
-      cell.className = 'day-cell';
-      if (idx < doneCount) cell.classList.add('done');
-      else if (idx === getCurrentDayIndex()) cell.classList.add('today');
-      cells.appendChild(cell);
-    }
-
-    row.appendChild(cells);
-    container.appendChild(row);
-  }
-}
-
-const holdBtn = document.getElementById('start-day-hold');
-const holdFill = document.getElementById('start-day-fill');
-const holdText = document.getElementById('start-day-text');
-let holdFrame = null;
-let holdStartedAt = 0;
-let holding = false;
-
-function resetHoldUi() {
-  holdFill.style.width = '0%';
-  holdText.textContent = 'Удерживай 3 секунды';
-}
-
-function finishHold() {
-  holding = false;
-  openToday();
-  holdFill.style.width = '100%';
-  holdText.textContent = '✅ День начат';
-  setTimeout(() => activateTab('spheres'), 400);
-}
-
-function startHold() {
-  if (isDayOpened() || holding) return;
-  holding = true;
-  holdStartedAt = Date.now();
-
-  const tick = () => {
-    if (!holding) return;
-    const elapsed = Date.now() - holdStartedAt;
-    const pct = Math.min(100, (elapsed / HOLD_MS) * 100);
-    holdFill.style.width = pct + '%';
-    const rem = Math.max(0, Math.ceil((HOLD_MS - elapsed) / 1000));
-    holdText.textContent = rem > 0 ? `Держи... ${rem}` : 'Отпускай!';
-    if (elapsed >= HOLD_MS) {
-      finishHold();
-      return;
-    }
-    holdFrame = requestAnimationFrame(tick);
   };
+  reader.readAsText(file);
+});
 
-  holdFrame = requestAnimationFrame(tick);
-}
+document.getElementById('settings-reset').addEventListener('click', () => {
+  if (confirm('ВНИМАНИЕ: Это полностью удалит все твои данные навсегда. Уверен?')) {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+});
 
-function stopHold() {
-  if (!holding) return;
-  holding = false;
-  if (holdFrame) cancelAnimationFrame(holdFrame);
-  holdFrame = null;
-  resetHoldUi();
-}
-
-['mousedown', 'touchstart', 'pointerdown'].forEach(evt =>
-  holdBtn.addEventListener(evt, e => {
-    e.preventDefault();
-    startHold();
-  }, { passive: false })
-);
-
-['mouseup', 'mouseleave', 'touchend', 'touchcancel', 'pointerup', 'pointercancel'].forEach(evt =>
-  holdBtn.addEventListener(evt, stopHold)
-);
-
-ensureDefaults();
-activateTab('days');
+/* Initial Render */
 renderSpheres();
 renderHabits();
-drawWheel();
-renderDays();
+renderGrid();
+if (document.querySelector('.tab.active').dataset.tab === 'spheres') drawWheel();
