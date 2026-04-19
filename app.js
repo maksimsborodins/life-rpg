@@ -1,12 +1,12 @@
 const DEFAULT_SPHERES = [
-  { id: 'trading',  name: '📈 Трейдинг',        color: '#facc15' },
-  { id: 'health',   name: '💪 Здоровье',        color: '#4ade80' },
-  { id: 'creative', name: '🎨 Творчество',      color: '#f472b6' },
-  { id: 'hobby',    name: '🎮 Хобби',          color: '#60a5fa' },
-  { id: 'looks',    name: '🪞 Внешний вид',     color: '#e879f9' },
-  { id: 'family',   name: '👨‍👩‍👧 Семья',         color: '#fb7185' },
-  { id: 'social',   name: '🤝 Знакомства',     color: '#34d399' },
-  { id: 'inner',    name: '🧘 Внутренний порядок', color: '#a78bfa' },
+  { id: 'trading',  name: '📈 Трейдинг',           color: '#facc15' },
+  { id: 'health',   name: '💪 Здоровье',           color: '#4ade80' },
+  { id: 'creative', name: '🎨 Творчество',         color: '#f472b6' },
+  { id: 'hobby',    name: '🎮 Хобби',             color: '#60a5fa' },
+  { id: 'looks',    name: '🪞 Внешний вид',        color: '#e879f9' },
+  { id: 'family',   name: '👨‍👩‍👧 Семья',            color: '#fb7185' },
+  { id: 'social',   name: '🤝 Знакомства',        color: '#34d399' },
+  { id: 'inner',    name: '🧘 Внутренний порядок',  color: '#a78bfa' },
 ];
 
 const START_YEAR = 2026;
@@ -19,14 +19,10 @@ const SEED_DAYS = ["2026-01-01","2026-01-02","2026-01-03","2026-01-04","2026-01-
 function loadData() { return JSON.parse(localStorage.getItem('lifeRPG') || '{}'); }
 function saveData(d) { localStorage.setItem('lifeRPG', JSON.stringify(d)); }
 function getTodayStr() { return new Date().toISOString().slice(0, 10); }
-
-function getSpheres() {
-  const d = loadData();
-  return d.spheres || DEFAULT_SPHERES;
-}
-
+function getSpheres() { const d = loadData(); return d.spheres || DEFAULT_SPHERES; }
 function getScores() { return loadData().scores || {}; }
 function getDoneDays() { return loadData().doneDays || []; }
+function getTodayImproved() { const d = loadData(); return d.improved || {}; }
 
 // --- SEED ---
 function seedDays() {
@@ -34,8 +30,9 @@ function seedDays() {
   if (!d.seeded) {
     d.doneDays = [...SEED_DAYS];
     d.seeded = true;
-    // записываем сферы по умолчанию
     d.spheres = DEFAULT_SPHERES;
+    d.scores = {};
+    DEFAULT_SPHERES.forEach(s => d.scores[s.id] = 5);
     saveData(d);
   }
 }
@@ -47,7 +44,7 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    if (btn.dataset.tab === 'wheel') drawWheel();
+    if (btn.dataset.tab === 'spheres') { renderSpheres(); drawWheel(); }
     if (btn.dataset.tab === 'days') renderDays();
   });
 });
@@ -59,25 +56,22 @@ document.getElementById('open-settings').addEventListener('click', () => {
   renderSettingsSpheres();
   overlay.classList.remove('hidden');
 });
-
-document.getElementById('settings-close').addEventListener('click', () => {
-  overlay.classList.add('hidden');
-});
-
-overlay.addEventListener('click', (e) => {
-  if (e.target === overlay) overlay.classList.add('hidden');
-});
+document.getElementById('settings-close').addEventListener('click', () => overlay.classList.add('hidden'));
+overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.add('hidden'); });
 
 function renderSettingsSpheres() {
   const spheres = getSpheres();
+  const scores = getScores();
   const container = document.getElementById('settings-spheres-list');
   container.innerHTML = '';
   spheres.forEach((s, i) => {
+    const val = scores[s.id] ?? 5;
     const row = document.createElement('div');
     row.className = 'settings-sphere-row';
     row.innerHTML = `
-      <input class="settings-emoji" type="text" maxlength="4" value="${s.name.split(' ')[0]}" data-i="${i}" placeholder="💫">
-      <input class="settings-name" type="text" value="${s.name.split(' ').slice(1).join(' ')}" data-i="${i}" placeholder="Название">
+      <input class="settings-emoji" type="text" maxlength="4" value="${s.name.split(' ')[0]}" data-i="${i}">
+      <input class="settings-name" type="text" value="${s.name.split(' ').slice(1).join(' ')}" data-i="${i}">
+      <input class="settings-score-input" type="number" min="0" max="10" value="${val}" data-id="${s.id}">
       <input class="settings-color" type="color" value="${s.color}" data-i="${i}">
     `;
     container.appendChild(row);
@@ -89,6 +83,7 @@ document.getElementById('settings-save').addEventListener('click', () => {
   const emojis = document.querySelectorAll('.settings-emoji');
   const names = document.querySelectorAll('.settings-name');
   const colors = document.querySelectorAll('.settings-color');
+  const scoreInputs = document.querySelectorAll('.settings-score-input');
   const spheres = getSpheres();
 
   spheres.forEach((s, i) => {
@@ -97,17 +92,23 @@ document.getElementById('settings-save').addEventListener('click', () => {
   });
 
   d.spheres = spheres;
+  d.scores = d.scores || {};
+  scoreInputs.forEach(inp => {
+    d.scores[inp.dataset.id] = Math.min(10, Math.max(0, parseInt(inp.value) || 0));
+  });
+
   saveData(d);
   overlay.classList.add('hidden');
   renderSpheres();
+  drawWheel();
 
   const btn = document.getElementById('settings-save');
   btn.textContent = '✅ Сохранено!';
-  setTimeout(() => btn.textContent = '💾 Сохранить сферы', 1500);
+  setTimeout(() => btn.textContent = '💾 Сохранить', 1500);
 });
 
 document.getElementById('settings-reset').addEventListener('click', () => {
-  if (confirm('Точно? Все данные, включая дни, будут удалены.')) {
+  if (confirm('Точно? Все данные будут удалены.')) {
     localStorage.removeItem('lifeRPG');
     location.reload();
   }
@@ -117,39 +118,49 @@ document.getElementById('settings-reset').addEventListener('click', () => {
 function renderSpheres() {
   const spheres = getSpheres();
   const scores = getScores();
+  const today = getTodayStr();
+  const improved = getTodayImproved();
   const container = document.getElementById('spheres-list');
   container.innerHTML = '';
+
   spheres.forEach(s => {
     const val = scores[s.id] ?? 5;
+    const isImproved = improved[s.id] === today;
+    const bars = Array.from({length: 10}, (_, i) => {
+      const filled = i < val;
+      return `<div class="bar-seg ${filled ? 'filled' : ''}" style="${filled ? 'background:' + s.color : ''}"></div>`;
+    }).join('');
+
     const div = document.createElement('div');
-    div.className = 'sphere-item';
+    div.className = 'sphere-item' + (isImproved ? ' improved' : '');
+    div.dataset.id = s.id;
     div.innerHTML = `
-      <div class="sphere-header">
+      <div class="sphere-row">
         <span class="sphere-name">${s.name}</span>
-        <span class="sphere-score" id="score-${s.id}">${val}</span>
+        <div class="sphere-right">
+          <div class="bar-track">${bars}</div>
+          <span class="sphere-score" style="color:${s.color}">${val}</span>
+          ${isImproved ? '<span class="improved-badge">✨</span>' : ''}
+        </div>
       </div>
-      <input type="range" min="0" max="10" value="${val}" class="sphere-slider" data-id="${s.id}">
     `;
+    div.addEventListener('click', () => toggleImproved(s.id));
     container.appendChild(div);
-  });
-  container.querySelectorAll('.sphere-slider').forEach(slider => {
-    slider.addEventListener('input', () => {
-      document.getElementById('score-' + slider.dataset.id).textContent = slider.value;
-    });
   });
 }
 
-document.getElementById('save-spheres').addEventListener('click', () => {
+function toggleImproved(id) {
   const d = loadData();
-  d.scores = d.scores || {};
-  document.querySelectorAll('.sphere-slider').forEach(slider => {
-    d.scores[slider.dataset.id] = parseInt(slider.value);
-  });
+  const today = getTodayStr();
+  if (!d.improved) d.improved = {};
+  if (d.improved[id] === today) {
+    delete d.improved[id];
+  } else {
+    d.improved[id] = today;
+  }
   saveData(d);
-  const btn = document.getElementById('save-spheres');
-  btn.textContent = '✅ Сохранено!';
-  setTimeout(() => btn.textContent = '💾 Сохранить', 1500);
-});
+  renderSpheres();
+}
 
 // --- WHEEL ---
 function drawWheel() {
@@ -158,12 +169,13 @@ function drawWheel() {
   const spheres = getSpheres();
   const scores = getScores();
   const cx = canvas.width / 2, cy = canvas.height / 2;
-  const R = cx - 28;
+  const R = cx - 30;
   const n = spheres.length;
   const step = (Math.PI * 2) / n;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // rings
   for (let i = 10; i >= 1; i--) {
     ctx.beginPath();
     for (let j = 0; j < n; j++) {
@@ -173,41 +185,48 @@ function drawWheel() {
       j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
     ctx.closePath();
-    ctx.strokeStyle = i % 2 === 0 ? '#2a2a3e' : '#1e1e30';
+    ctx.strokeStyle = i % 2 === 0 ? '#252538' : '#1a1a2e';
     ctx.lineWidth = 1;
     ctx.stroke();
   }
 
+  // dividers
   for (let j = 0; j < n; j++) {
     const angle = step * j - Math.PI / 2;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
-    ctx.strokeStyle = '#333'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = '#2a2a3e'; ctx.lineWidth = 1; ctx.stroke();
   }
 
-  ctx.beginPath();
+  // fill each segment with its own color
   spheres.forEach((s, j) => {
     const val = scores[s.id] ?? 5;
-    const angle = step * j - Math.PI / 2;
+    const angleStart = step * j - Math.PI / 2;
+    const angleEnd = step * (j + 1) - Math.PI / 2;
     const r = (R * val) / 10;
-    const x = cx + r * Math.cos(angle), y = cy + r * Math.sin(angle);
-    j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(124,58,237,0.35)';
-  ctx.fill();
-  ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.stroke();
 
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angleStart, angleEnd);
+    ctx.closePath();
+    ctx.fillStyle = s.color + '55';
+    ctx.fill();
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  // labels
   spheres.forEach((s, j) => {
-    const angle = step * j - Math.PI / 2;
-    const r = R + 20;
+    const angle = step * j + step / 2 - Math.PI / 2;
+    const r = R + 18;
     const x = cx + r * Math.cos(angle), y = cy + r * Math.sin(angle);
     const val = scores[s.id] ?? 5;
-    ctx.font = 'bold 12px Segoe UI';
+    ctx.font = '11px Segoe UI';
     ctx.fillStyle = s.color;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(s.name.split(' ')[0] + ' ' + val, x, y);
+    ctx.fillText(s.name.split(' ')[0], x, y);
   });
 }
 
@@ -230,15 +249,12 @@ function renderDays() {
     const year = START_YEAR + y;
     const row = document.createElement('div');
     row.className = 'year-row' + (year === currentYear ? ' current-year' : '');
-
     const label = document.createElement('div');
     label.className = 'year-label';
     label.textContent = year;
     row.appendChild(label);
-
     const cells = document.createElement('div');
     cells.className = 'year-cells';
-
     for (let d = 0; d < DAYS_PER_YEAR; d++) {
       const idx = y * DAYS_PER_YEAR + d;
       const cell = document.createElement('div');
@@ -247,7 +263,6 @@ function renderDays() {
       else if (idx === doneCount) cell.classList.add('today');
       cells.appendChild(cell);
     }
-
     row.appendChild(cells);
     container.appendChild(row);
   }
@@ -272,3 +287,4 @@ document.getElementById('close-day-btn').addEventListener('click', () => {
 // --- INIT ---
 seedDays();
 renderSpheres();
+drawWheel();

@@ -7,7 +7,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Life RPG">
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon.png">
   <title>Life RPG</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -20,47 +19,37 @@
         <h3>⚙️ Настройки</h3>
         <button id="settings-close" class="settings-close">✕</button>
       </div>
-
-      <p class="settings-hint">Измени названия и цвета сфер. Эмодзи в начале названия обязательны.</p>
-
+      <p class="settings-hint">Изменяй названия, цвета и баллы сфер (рекомендую пересматривать раз в месяц).</p>
       <div id="settings-spheres-list"></div>
-
-      <button id="settings-save" class="btn-primary">💾 Сохранить сферы</button>
-
+      <button id="settings-save" class="btn-primary">💾 Сохранить</button>
       <div class="settings-divider"></div>
-
       <div class="settings-section-title">Опасная зона</div>
       <button id="settings-reset" class="btn-danger">🗑️ Сбросить все данные</button>
     </div>
   </div>
 
   <nav class="nav">
-    <button class="nav-btn active" data-tab="spheres">⚔️ Сферы</button>
-    <button class="nav-btn" data-tab="wheel">🎯 Колесо</button>
+    <button class="nav-btn active" data-tab="spheres">🌀 Сферы</button>
     <button class="nav-btn" data-tab="days">⏳ Остаток</button>
     <button class="nav-btn" id="open-settings">⚙️</button>
   </nav>
 
-  <!-- SPHERES -->
+  <!-- SPHERES + WHEEL -->
   <div id="tab-spheres" class="tab active">
-    <h2>Прокачка сфер</h2>
+    <h2>🌀 Сферы</h2>
+    <p class="spheres-hint">Нажми на сферу, если сегодня улучшил её ― появится зелёный отметка.</p>
     <div id="spheres-list"></div>
-    <button id="save-spheres" class="btn-primary">💾 Сохранить</button>
-  </div>
-
-  <!-- WHEEL -->
-  <div id="tab-wheel" class="tab">
-    <h2>Колесо баланса</h2>
-    <canvas id="wheel-canvas" width="320" height="320"></canvas>
+    <div class="wheel-section">
+      <div class="wheel-title">Колесо баланса</div>
+      <canvas id="wheel-canvas" width="300" height="300"></canvas>
+    </div>
   </div>
 
   <!-- DAYS -->
   <div id="tab-days" class="tab">
     <h2>⏳ Остаток</h2>
     <div class="days-meta">
-      <div class="days-meta-left">
-        <strong id="days-done">0</strong> <span>/ 10 950 дней</span>
-      </div>
+      <div class="days-meta-left"><strong id="days-done">0</strong> <span>/ 10 950 дней</span></div>
       <div class="days-meta-right" id="days-pct-label">0%</div>
     </div>
     <div class="days-progress-bar"><div id="days-progress-fill"></div></div>
