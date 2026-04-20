@@ -299,3 +299,9 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
   background: rgba(192, 132, 252, 0.08);
   box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.4);
 }
+
+.h-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
