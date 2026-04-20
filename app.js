@@ -367,7 +367,7 @@ function setupEventListeners() {
         const input = document.getElementById('new-habit-name');
         const n = input.value.trim();
         if (!n) return;
-        data.habits.push({ id: 'h_' + Date.now(), name: n, done: false, streak: 0 });
+        data.habits.push({ id: 'h_' + Date.now(), name: n, done: false, streak: 0, description: '' });
         input.value = '';
         saveData({ wheel: false });
         renderSettings();
@@ -432,13 +432,49 @@ function renderSettings() {
 
     data.habits.forEach((h, i) => {
         const row = document.createElement('div');
-        row.style = 'display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:12px; padding:12px 16px; margin-bottom:8px;';
+        row.style = 'display:flex; flex-direction:column; gap:6px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin-bottom:8px;';
+
         row.innerHTML = `
-            <span style="color:white; font-size:14px;">${h.name}</span>
-            <button style="background:none; border:none; color:#555; font-size:20px; cursor:pointer; line-height:1; padding:4px 8px; border-radius:6px; transition:color 0.2s;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#555'">−</button>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <input type="text" data-habit-name="${i}" value="${h.name}" placeholder="Название привычки"
+                    style="flex:1; background:transparent; border:none; color:white; font-size:14px; outline:none;">
+                <button data-habit-del="${i}"
+                    style="background:none; border:none; color:#555; font-size:18px; cursor:pointer; line-height:1; padding:2px 6px; border-radius:6px; transition:background 0.15s, color 0.15s;">
+                    −
+                </button>
+            </div>
+            <textarea data-habit-desc="${i}" placeholder="Зачем я это делаю (описание)"
+                style="width:100%; min-height:40px; resize:vertical; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; padding:6px 8px; color:var(--text-muted); font-size:13px; outline:none;"></textarea>
         `;
-        row.querySelector('button').addEventListener('click', () => deleteHabit(i));
+
         habitsContainer.appendChild(row);
+
+        const nameInput = row.querySelector(`[data-habit-name="${i}"]`);
+        const descInput = row.querySelector(`[data-habit-desc="${i}"]`);
+        const delBtn = row.querySelector(`[data-habit-del="${i}"]`);
+
+        nameInput.value = h.name;
+        descInput.value = h.description || '';
+
+        nameInput.addEventListener('input', () => {
+            data.habits[i].name = nameInput.value;
+            saveData({ wheel: false, skipRender: true });
+        });
+
+        descInput.addEventListener('input', () => {
+            data.habits[i].description = descInput.value;
+            saveData({ wheel: false, skipRender: true });
+        });
+
+        delBtn.addEventListener('mouseover', () => {
+            delBtn.style.color = '#f87171';
+            delBtn.style.background = 'rgba(248,113,113,0.08)';
+        });
+        delBtn.addEventListener('mouseout', () => {
+            delBtn.style.color = '#555';
+            delBtn.style.background = 'transparent';
+        });
+        delBtn.addEventListener('click', () => deleteHabit(i));
     });
 }
 
