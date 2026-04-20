@@ -23,6 +23,7 @@ function loadData() {
         if (!d.spheres || d.spheres.length === 0) d.spheres = JSON.parse(JSON.stringify(DEFAULT_SPHERES));
         if (!d.habits) d.habits = [];
         if (!d.openedDays) d.openedDays = [];
+        if (!d.sphereChecks) d.sphereChecks = {}; // { 'YYYY-MM-DD': ['trading','health'] }
         d.habits = d.habits.map(h => ({
             ...h,
             done: h.done || false,
@@ -30,7 +31,12 @@ function loadData() {
         }));
         return d;
     } catch {
-        return { spheres: JSON.parse(JSON.stringify(DEFAULT_SPHERES)), habits: [], openedDays: [] };
+        return {
+            spheres: JSON.parse(JSON.stringify(DEFAULT_SPHERES)),
+            habits: [],
+            openedDays: [],
+            sphereChecks: {}
+        };
     }
 }
 
@@ -65,6 +71,9 @@ function init() {
             if (!h.done) h.streak = 0;
             h.done = false;
         });
+
+        // новый день — очищаем отметки сфер
+        data.sphereChecks[today] = [];
         data.lastVisit = today;
         saveData({ wheel: false });
     }
@@ -108,7 +117,6 @@ function renderLifeCounters() {
 
     const now = new Date();
 
-    // Следующий день рождения
     const nextBirthday = new Date('1998-12-26T00:00:00');
     nextBirthday.setFullYear(now.getFullYear());
     if (nextBirthday <= now) nextBirthday.setFullYear(now.getFullYear() + 1);
@@ -158,9 +166,17 @@ function renderLifeCounters() {
 function renderSpheres() {
     if (!ui.dashboardSpheres) return;
     ui.dashboardSpheres.innerHTML = '';
+
+    const today = new Date().toLocaleDateString('en-CA');
+    const todayChecks = data.sphereChecks[today] || [];
+
     data.spheres.forEach(s => {
+        const isChecked = todayChecks.includes(s.id);
+
         const item = document.createElement('div');
         item.className = 'sphere-item';
+        if (isChecked) item.classList.add('sphere-checked');
+
         item.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:16px;">
                 <span class="sphere-name" style="margin-bottom:0;">${s.name}</span>
@@ -170,6 +186,18 @@ function renderSpheres() {
                 <div class="level-fill" style="width: ${s.score * 10}%; background: ${s.color}"></div>
             </div>
         `;
+
+        item.onclick = () => {
+            const today = new Date().toLocaleDateString('en-CA');
+            if (!data.sphereChecks[today]) data.sphereChecks[today] = [];
+
+            // уже отмечена — игнорируем клик
+            if (data.sphereChecks[today].includes(s.id)) return;
+
+            data.sphereChecks[today].push(s.id);
+            saveData({ wheel: false });
+        };
+
         ui.dashboardSpheres.appendChild(item);
     });
 }
