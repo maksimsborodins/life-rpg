@@ -9,10 +9,6 @@ const DEFAULT_SPHERES = [
     { id: 'inner', name: 'Внутренний порядок', color: '#a78bfa', score: 8 },
 ];
 
-const START_YEAR = 2026;
-const YEARS = 30;
-const DAYS_PER_YEAR = 365;
-const TOTAL_DAYS = YEARS * DAYS_PER_YEAR;
 const STORAGE_KEY = 'lifeRPG_Dashboard_v3';
 
 let data = loadData();
@@ -23,9 +19,8 @@ function loadData() {
         if (!d.spheres || d.spheres.length === 0) d.spheres = JSON.parse(JSON.stringify(DEFAULT_SPHERES));
         if (!d.habits) d.habits = [];
         if (!d.openedDays) d.openedDays = [];
-        if (!d.sphereChecks) d.sphereChecks = {}; // { 'YYYY-MM-DD': ['trading','health'] }
-        if (!d.habitChecks) d.habitChecks = {};   // { 'YYYY-MM-DD': ['habitId', ...] }
-
+        if (!d.sphereChecks) d.sphereChecks = {};
+        if (!d.habitChecks) d.habitChecks = {};
         d.habits = d.habits.map(h => ({
             ...h,
             done: h.done || false,
@@ -70,29 +65,24 @@ function init() {
     setupEventListeners();
 
     const today = new Date().toLocaleDateString('en-CA');
-if (data.lastVisit !== today) {
-    const yesterday = data.lastVisit;
+    if (data.lastVisit !== today) {
+        const yesterday = data.lastVisit;
 
-    // обновляем стрики по вчерашнему дню
-    if (yesterday && data.habitChecks && data.habitChecks[yesterday]) {
-        const doneIds = new Set(data.habitChecks[yesterday]);
-        data.habits.forEach(h => {
-            if (doneIds.has(h.id)) {
-                h.streak = (h.streak || 0) + 1;
-            } else {
-                h.streak = 0;
-            }
-        });
-    } else {
-        data.habits.forEach(h => h.streak = h.streak || 0);
+        if (yesterday && data.habitChecks && data.habitChecks[yesterday]) {
+            const doneIds = new Set(data.habitChecks[yesterday]);
+            data.habits.forEach(h => {
+                if (doneIds.has(h.id)) h.streak = (h.streak || 0) + 1;
+                else h.streak = 0;
+            });
+        } else {
+            data.habits.forEach(h => h.streak = h.streak || 0);
+        }
+
+        data.sphereChecks[today] = [];
+        data.habitChecks[today] = [];
+        data.lastVisit = today;
+        saveData({ wheel: false });
     }
-
-    // новый день — очищаем отметки сфер и привычек
-    data.sphereChecks[today] = [];
-    data.habitChecks[today] = [];
-    data.lastVisit = today;
-    saveData({ wheel: false });
-}
 
     setInterval(updateGreeting, 60000);
 }
@@ -121,8 +111,6 @@ function renderHeader() {
     statsEl.innerHTML = '';
 }
 
-const BIRTHDAY = new Date('1998-12-26T00:00:00');
-
 function renderLifeCounters() {
     const el = document.getElementById('life-counters');
     if (!el) return;
@@ -142,13 +130,7 @@ function renderLifeCounters() {
     ];
 
     const birthdayHtml = `
-        <div style="
-            display:flex; flex-direction:column; align-items:flex-end;
-            padding: 8px 16px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-        ">
+        <div style="display:flex; flex-direction:column; align-items:flex-end; padding:8px 16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:14px;">
             <span style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; margin-bottom:3px;">до ${nextAge} лет</span>
             <span style="font-size:16px; font-weight:800; color:#fff;">🎂 ${daysToNextBirthday} дн.</span>
         </div>
@@ -159,13 +141,7 @@ function renderLifeCounters() {
         target.setFullYear(target.getFullYear() + m.age);
         const daysLeft = Math.max(0, Math.ceil((target - now) / 86400000));
         return `
-            <div style="
-                display:flex; flex-direction:column; align-items:flex-end;
-                padding: 8px 16px;
-                background: rgba(255,255,255,0.03);
-                border: 1px solid rgba(255,255,255,0.06);
-                border-radius: 14px;
-            ">
+            <div style="display:flex; flex-direction:column; align-items:flex-end; padding:8px 16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:14px;">
                 <span style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; margin-bottom:3px;">до ${m.age} лет</span>
                 <span style="font-size:16px; font-weight:800; color:${m.color};">${daysLeft.toLocaleString('ru-RU')} дн.</span>
             </div>
@@ -184,32 +160,24 @@ function renderSpheres() {
 
     data.spheres.forEach(s => {
         const isChecked = todayChecks.includes(s.id);
-
         const item = document.createElement('div');
-        item.className = 'sphere-item';
-        if (isChecked) item.classList.add('sphere-checked');
-
+        item.className = 'sphere-item' + (isChecked ? ' sphere-checked' : '');
         item.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:16px;">
                 <span class="sphere-name" style="margin-bottom:0;">${s.name}</span>
                 <span style="font-size:32px; font-weight:800; color:var(--text-main); line-height:1;">${s.score}</span>
             </div>
             <div class="level-track">
-                <div class="level-fill" style="width: ${s.score * 10}%; background: ${s.color}"></div>
+                <div class="level-fill" style="width:${s.score * 10}%; background:${s.color}"></div>
             </div>
         `;
-
         item.onclick = () => {
             const today = new Date().toLocaleDateString('en-CA');
             if (!data.sphereChecks[today]) data.sphereChecks[today] = [];
-
-            // уже отмечена — игнорируем клик
             if (data.sphereChecks[today].includes(s.id)) return;
-
             data.sphereChecks[today].push(s.id);
             saveData({ wheel: false });
         };
-
         ui.dashboardSpheres.appendChild(item);
     });
 }
@@ -223,7 +191,6 @@ function renderHabits() {
 
     data.habits.forEach((h) => {
         const isCheckedToday = todayChecks.includes(h.id);
-
         const card = document.createElement('div');
         card.className = `habit-card ${isCheckedToday ? 'done' : ''}`;
         card.innerHTML = `
@@ -239,18 +206,13 @@ function renderHabits() {
                 </div>
             </div>
         `;
-
         card.onclick = () => {
             const today = new Date().toLocaleDateString('en-CA');
             if (!data.habitChecks[today]) data.habitChecks[today] = [];
-
-            // уже отмечена сегодня — игнорируем клик
             if (data.habitChecks[today].includes(h.id)) return;
-
             data.habitChecks[today].push(h.id);
             saveData({ wheel: false });
         };
-
         ui.dashboardHabits.appendChild(card);
     });
 }
@@ -261,9 +223,7 @@ function drawWheel() {
     const size = 400;
     ui.canvas.width = size;
     ui.canvas.height = size;
-    const cx = size / 2;
-    const cy = size / 2;
-    const radius = 130;
+    const cx = size / 2, cy = size / 2, radius = 130;
     const slices = data.spheres.length;
     const sliceAngle = (Math.PI * 2) / slices;
     ctx.clearRect(0, 0, size, size);
@@ -302,8 +262,7 @@ function drawWheel() {
         const r = (radius / 10) * s.score;
         const x = cx + Math.cos(angle) * r;
         const y = cy + Math.sin(angle) * r;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     });
     ctx.closePath();
     ctx.fillStyle = 'rgba(192, 132, 252, 0.2)';
@@ -338,18 +297,95 @@ function setupNavigation() {
     });
 }
 
+// ─── Sync helpers ────────────────────────────────────────────────────────────
+
+function getSyncCredentials() {
+    const token = document.getElementById('sync-token')?.value.trim()
+        || localStorage.getItem('sync_token') || '';
+    const gistId = document.getElementById('sync-gist-id')?.value.trim()
+        || localStorage.getItem('sync_gist_id') || '';
+    return { token, gistId };
+}
+
+function saveSyncCredentials() {
+    const token = document.getElementById('sync-token')?.value.trim();
+    const gistId = document.getElementById('sync-gist-id')?.value.trim();
+    if (token) localStorage.setItem('sync_token', token);
+    if (gistId) localStorage.setItem('sync_gist_id', gistId);
+}
+
+function setSyncStatus(msg, color = 'var(--text-muted)') {
+    const el = document.getElementById('sync-status');
+    if (el) { el.textContent = msg; el.style.color = color; }
+}
+
+async function exportData() {
+    saveSyncCredentials();
+    const { token, gistId } = getSyncCredentials();
+    if (!token || !gistId) { setSyncStatus('Введи токен и Gist ID', '#f87171'); return; }
+    setSyncStatus('Сохраняю...');
+    try {
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `token ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                files: { 'project-life.json': { content: JSON.stringify(data, null, 2) } }
+            })
+        });
+        if (res.ok) setSyncStatus('✓ Сохранено в облако', '#4ade80');
+        else setSyncStatus('Ошибка сохранения', '#f87171');
+    } catch {
+        setSyncStatus('Нет соединения', '#f87171');
+    }
+}
+
+async function importData() {
+    saveSyncCredentials();
+    const { token, gistId } = getSyncCredentials();
+    if (!token || !gistId) { setSyncStatus('Введи токен и Gist ID', '#f87171'); return; }
+    setSyncStatus('Загружаю...');
+    try {
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+            headers: { 'Authorization': `token ${token}` }
+        });
+        const json = await res.json();
+        const content = json.files?.['project-life.json']?.content;
+        if (!content) { setSyncStatus('Файл пустой', '#f87171'); return; }
+        data = JSON.parse(content);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        renderAll();
+        renderSettings();
+        setSyncStatus('✓ Загружено', '#4ade80');
+    } catch {
+        setSyncStatus('Ошибка загрузки', '#f87171');
+    }
+}
+
+// ─── Event listeners ─────────────────────────────────────────────────────────
+
 function setupEventListeners() {
     const openBtn = document.getElementById('open-settings');
     const closeBtn = document.getElementById('close-settings');
     const saveBtn = document.getElementById('save-spheres');
     const addHabitBtn = document.getElementById('add-habit');
     const exportBtn = document.getElementById('export-btn');
-    const importInput = document.getElementById('import-input');
+    const importBtn = document.getElementById('import-btn');
+    const resetTodayBtn = document.getElementById('reset-today');
 
     if (openBtn) openBtn.onclick = () => {
         ui.settingsModal.classList.remove('hidden');
-        requestAnimationFrame(() => renderSettings());
+        requestAnimationFrame(() => {
+            renderSettings();
+            const tokenInput = document.getElementById('sync-token');
+            const gistInput = document.getElementById('sync-gist-id');
+            if (tokenInput) tokenInput.value = localStorage.getItem('sync_token') || '';
+            if (gistInput) gistInput.value = localStorage.getItem('sync_gist_id') || '';
+        });
     };
+
     if (closeBtn) closeBtn.onclick = () => ui.settingsModal.classList.add('hidden');
 
     if (saveBtn) saveBtn.onclick = () => {
@@ -374,43 +410,17 @@ function setupEventListeners() {
     };
 
     if (exportBtn) exportBtn.onclick = exportData;
-    const resetTodayBtn = document.getElementById('reset-today');
+    if (importBtn) importBtn.onclick = importData;
+
     if (resetTodayBtn) resetTodayBtn.onclick = () => {
-    const today = new Date().toLocaleDateString('en-CA');
-    data.sphereChecks[today] = [];
-    data.habitChecks[today] = [];
-    saveData({ wheel: false });
-};
-    if (importInput) importInput.addEventListener('change', e => {
-        importData(e.target.files[0]);
-        e.target.value = '';
-    });
+        const today = new Date().toLocaleDateString('en-CA');
+        data.sphereChecks[today] = [];
+        data.habitChecks[today] = [];
+        saveData({ wheel: false });
+    };
 }
 
-function exportData() {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `project-life-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-}
-
-async function importData(file) {
-    if (!file) return;
-    try {
-        const text = await file.text();
-        data = JSON.parse(text);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        renderAll();
-        renderSettings();
-    } catch {
-        alert('Ошибка: файл повреждён');
-    }
-}
+// ─── Settings ────────────────────────────────────────────────────────────────
 
 function renderSettings() {
     if (!ui.settingsSpheres) return;
@@ -440,7 +450,6 @@ function renderSettings() {
     data.habits.forEach((h, i) => {
         const row = document.createElement('div');
         row.style = 'display:flex; flex-direction:column; gap:6px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin-bottom:8px;';
-
         row.innerHTML = `
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                 <input type="text" data-habit-name="${i}" value="${h.name}" placeholder="Название привычки"
@@ -453,7 +462,6 @@ function renderSettings() {
             <textarea data-habit-desc="${i}" placeholder="Зачем я это делаю (описание)"
                 style="width:100%; min-height:40px; resize:vertical; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; padding:6px 8px; color:var(--text-muted); font-size:13px; outline:none;"></textarea>
         `;
-
         habitsContainer.appendChild(row);
 
         const nameInput = row.querySelector(`[data-habit-name="${i}"]`);
@@ -467,12 +475,10 @@ function renderSettings() {
             data.habits[i].name = nameInput.value;
             saveData({ wheel: false, skipRender: true });
         });
-
         descInput.addEventListener('input', () => {
             data.habits[i].description = descInput.value;
             saveData({ wheel: false, skipRender: true });
         });
-
         delBtn.addEventListener('mouseover', () => {
             delBtn.style.color = '#f87171';
             delBtn.style.background = 'rgba(248,113,113,0.08)';
