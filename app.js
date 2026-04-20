@@ -121,37 +121,6 @@ function renderLifeCounters() {
     }).join('');
 }
 
-    el.innerHTML = milestones.map(m => {
-        const target = new Date(BIRTHDAY);
-        target.setFullYear(BIRTHDAY.getFullYear() + m.age);
-
-        const prevBirthday = new Date(BIRTHDAY);
-        prevBirthday.setFullYear(BIRTHDAY.getFullYear() + m.age - 10);
-
-        const totalMs = target - prevBirthday;
-        const remainMs = target - now;
-        const daysLeft = Math.max(0, Math.ceil(remainMs / 86400000));
-        const pct = Math.min(100, Math.max(0, ((totalMs - remainMs) / totalMs) * 100));
-
-        const isPast = remainMs < 0;
-
-        return `
-            <div style="margin-bottom:20px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <span style="font-size:14px; font-weight:600; color:var(--text-main);">${m.label}</span>
-                    <span style="font-size:13px; color:var(--text-muted);">
-                        ${isPast ? 'позади' : `${daysLeft.toLocaleString('ru-RU')} дней`}
-                    </span>
-                </div>
-                <div style="height:6px; background:rgba(255,255,255,0.06); border-radius:10px; overflow:hidden;">
-                    <div style="height:100%; width:${pct.toFixed(1)}%; background:${m.color}; border-radius:10px; transition:width 0.4s ease;"></div>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted); margin-top:5px;">${pct.toFixed(1)}% десятилетия прожито</div>
-            </div>
-        `;
-    }).join('');
-}
-
 function renderSpheres() {
     if (!ui.dashboardSpheres) return;
     ui.dashboardSpheres.innerHTML = '';
