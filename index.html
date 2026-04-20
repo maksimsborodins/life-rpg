@@ -32,7 +32,10 @@
                     <h2 id="greeting-text">Добрый день, Максим</h2>
                     <p class="date-text" id="current-date">Понедельник, 20 Апреля</p>
                 </div>
-                <div id="header-stats" style="display:flex; gap:24px; color:var(--text-muted); font-size:14px;"></div>
+                <div style="display:flex; align-items:center; gap:32px;">
+                    <div id="header-stats" style="color:var(--text-muted); font-size:14px;"></div>
+                    <div id="life-counters" style="display:flex; gap:24px;"></div>
+                </div>
             </header>
 
             <div id="page-dashboard" class="page-content">
@@ -51,12 +54,6 @@
                                 <h3>Привычки</h3>
                             </div>
                             <div id="dashboard-habits" class="habit-list"></div>
-                        </section>
-                        <section class="card">
-                            <div class="card-title">
-                                <h3>Время жизни</h3>
-                            </div>
-                            <div id="life-counters"></div>
                         </section>
                     </div>
                 </div>
