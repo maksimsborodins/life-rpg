@@ -24,10 +24,13 @@ function loadData() {
         if (!d.habits) d.habits = [];
         if (!d.openedDays) d.openedDays = [];
         if (!d.sphereChecks) d.sphereChecks = {}; // { 'YYYY-MM-DD': ['trading','health'] }
+        if (!d.habitChecks) d.habitChecks = {};   // { 'YYYY-MM-DD': ['habitId', ...] }
+
         d.habits = d.habits.map(h => ({
             ...h,
             done: h.done || false,
-            streak: h.streak || 0
+            streak: h.streak || 0,
+            description: h.description || ''
         }));
         return d;
     } catch {
@@ -35,7 +38,8 @@ function loadData() {
             spheres: JSON.parse(JSON.stringify(DEFAULT_SPHERES)),
             habits: [],
             openedDays: [],
-            sphereChecks: {}
+            sphereChecks: {},
+            habitChecks: {}
         };
     }
 }
@@ -66,17 +70,29 @@ function init() {
     setupEventListeners();
 
     const today = new Date().toLocaleDateString('en-CA');
-    if (data.lastVisit !== today) {
-        data.habits.forEach(h => {
-            if (!h.done) h.streak = 0;
-            h.done = false;
-        });
+if (data.lastVisit !== today) {
+    const yesterday = data.lastVisit;
 
-        // новый день — очищаем отметки сфер
-        data.sphereChecks[today] = [];
-        data.lastVisit = today;
-        saveData({ wheel: false });
+    // обновляем стрики по вчерашнему дню
+    if (yesterday && data.habitChecks && data.habitChecks[yesterday]) {
+        const doneIds = new Set(data.habitChecks[yesterday]);
+        data.habits.forEach(h => {
+            if (doneIds.has(h.id)) {
+                h.streak = (h.streak || 0) + 1;
+            } else {
+                h.streak = 0;
+            }
+        });
+    } else {
+        data.habits.forEach(h => h.streak = h.streak || 0);
     }
+
+    // новый день — очищаем отметки сфер и привычек
+    data.sphereChecks[today] = [];
+    data.habitChecks[today] = [];
+    data.lastVisit = today;
+    saveData({ wheel: false });
+}
 
     setInterval(updateGreeting, 60000);
 }
@@ -100,13 +116,9 @@ function renderAll() {
 }
 
 function renderHeader() {
-    const doneTodayCount = data.habits.filter(h => h.done).length;
-    const totalHabits = data.habits.length;
     const statsEl = document.getElementById('header-stats');
     if (!statsEl) return;
-    statsEl.innerHTML = totalHabits > 0
-        ? `<span>✅ Привычки: <b>${doneTodayCount}/${totalHabits}</b></span>`
-        : '';
+    statsEl.innerHTML = '';
 }
 
 const BIRTHDAY = new Date('1998-12-26T00:00:00');
@@ -205,25 +217,40 @@ function renderSpheres() {
 function renderHabits() {
     if (!ui.dashboardHabits) return;
     ui.dashboardHabits.innerHTML = '';
+
+    const today = new Date().toLocaleDateString('en-CA');
+    const todayChecks = data.habitChecks[today] || [];
+
     data.habits.forEach((h) => {
+        const isCheckedToday = todayChecks.includes(h.id);
+
         const card = document.createElement('div');
-        card.className = `habit-card ${h.done ? 'done' : ''}`;
+        card.className = `habit-card ${isCheckedToday ? 'done' : ''}`;
         card.innerHTML = `
             <div class="checkbox"></div>
             <div class="habit-info">
-                <div class="h-name">${h.name}</div>
+                <div>
+                    <div class="h-name">${h.name}</div>
+                    ${h.description ? `<div class="h-desc">${h.description}</div>` : ''}
+                </div>
                 <div class="h-streak-badge">
                     <span>🔥</span>
                     <span>${h.streak || 0}</span>
                 </div>
             </div>
         `;
+
         card.onclick = () => {
-            h.done = !h.done;
-            if (h.done) h.streak = (h.streak || 0) + 1;
-            else h.streak = Math.max(0, (h.streak || 0) - 1);
+            const today = new Date().toLocaleDateString('en-CA');
+            if (!data.habitChecks[today]) data.habitChecks[today] = [];
+
+            // уже отмечена сегодня — игнорируем клик
+            if (data.habitChecks[today].includes(h.id)) return;
+
+            data.habitChecks[today].push(h.id);
             saveData({ wheel: false });
         };
+
         ui.dashboardHabits.appendChild(card);
     });
 }
