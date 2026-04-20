@@ -374,6 +374,13 @@ function setupEventListeners() {
     };
 
     if (exportBtn) exportBtn.onclick = exportData;
+    const resetTodayBtn = document.getElementById('reset-today');
+    if (resetTodayBtn) resetTodayBtn.onclick = () => {
+    const today = new Date().toLocaleDateString('en-CA');
+    data.sphereChecks[today] = [];
+    data.habitChecks[today] = [];
+    saveData({ wheel: false });
+};
     if (importInput) importInput.addEventListener('change', e => {
         importData(e.target.files[0]);
         e.target.value = '';
