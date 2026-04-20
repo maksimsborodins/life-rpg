@@ -107,18 +107,52 @@ function renderLifeCounters() {
     if (!el) return;
 
     const now = new Date();
+
+    // Следующий день рождения
+    const nextBirthday = new Date('1998-12-26T00:00:00');
+    nextBirthday.setFullYear(now.getFullYear());
+    if (nextBirthday <= now) nextBirthday.setFullYear(now.getFullYear() + 1);
+    const daysToNextBirthday = Math.ceil((nextBirthday - now) / 86400000);
+    const nextAge = nextBirthday.getFullYear() - 1998;
+
     const milestones = [
         { age: 30, color: '#4ade80' },
         { age: 40, color: '#facc15' },
         { age: 50, color: '#f472b6' },
     ];
 
-    el.innerHTML = milestones.map(m => {
+    const birthdayHtml = `
+        <div style="
+            display:flex; flex-direction:column; align-items:flex-end;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+        ">
+            <span style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; margin-bottom:3px;">до ${nextAge} лет</span>
+            <span style="font-size:16px; font-weight:800; color:#fff;">🎂 ${daysToNextBirthday} дн.</span>
+        </div>
+    `;
+
+    const milestonesHtml = milestones.map(m => {
         const target = new Date('1998-12-26T00:00:00');
         target.setFullYear(target.getFullYear() + m.age);
         const daysLeft = Math.max(0, Math.ceil((target - now) / 86400000));
-        return `<span style="font-size:13px; font-weight:600; color:${m.color};">до ${m.age} · ${daysLeft.toLocaleString('ru-RU')} дн.</span>`;
+        return `
+            <div style="
+                display:flex; flex-direction:column; align-items:flex-end;
+                padding: 8px 16px;
+                background: rgba(255,255,255,0.03);
+                border: 1px solid rgba(255,255,255,0.06);
+                border-radius: 14px;
+            ">
+                <span style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; margin-bottom:3px;">до ${m.age} лет</span>
+                <span style="font-size:16px; font-weight:800; color:${m.color};">${daysLeft.toLocaleString('ru-RU')} дн.</span>
+            </div>
+        `;
     }).join('');
+
+    el.innerHTML = birthdayHtml + milestonesHtml;
 }
 
 function renderSpheres() {
