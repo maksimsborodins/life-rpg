@@ -107,12 +107,19 @@ function renderLifeCounters() {
     if (!el) return;
 
     const now = new Date();
-
     const milestones = [
-        { age: 30, label: 'до 30 лет', color: '#4ade80' },
-        { age: 40, label: 'до 40 лет', color: '#facc15' },
-        { age: 50, label: 'до 50 лет', color: '#f472b6' },
+        { age: 30, color: '#4ade80' },
+        { age: 40, color: '#facc15' },
+        { age: 50, color: '#f472b6' },
     ];
+
+    el.innerHTML = milestones.map(m => {
+        const target = new Date('1998-12-26T00:00:00');
+        target.setFullYear(target.getFullYear() + m.age);
+        const daysLeft = Math.max(0, Math.ceil((target - now) / 86400000));
+        return `<span style="font-size:13px; font-weight:600; color:${m.color};">до ${m.age} · ${daysLeft.toLocaleString('ru-RU')} дн.</span>`;
+    }).join('');
+}
 
     el.innerHTML = milestones.map(m => {
         const target = new Date(BIRTHDAY);
