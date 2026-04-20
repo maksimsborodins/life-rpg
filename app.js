@@ -83,6 +83,7 @@ function updateGreeting() {
 }
 
 function renderAll() {
+    renderLifeCounters();
     renderHeader();
     renderSpheres();
     renderHabits();
@@ -90,17 +91,58 @@ function renderAll() {
 }
 
 function renderHeader() {
-    const totalScore = data.spheres.reduce((sum, s) => sum + s.score, 0);
-    const avg = (totalScore / data.spheres.length).toFixed(1);
     const doneTodayCount = data.habits.filter(h => h.done).length;
     const totalHabits = data.habits.length;
-
     const statsEl = document.getElementById('header-stats');
     if (!statsEl) return;
-    statsEl.innerHTML = `
-        <span>⚡ Средний балл: <b>${avg}</b></span>
-        <span>✅ Привычки сегодня: <b>${doneTodayCount}/${totalHabits}</b></span>
-    `;
+    statsEl.innerHTML = totalHabits > 0
+        ? `<span>✅ Привычки: <b>${doneTodayCount}/${totalHabits}</b></span>`
+        : '';
+}
+
+const BIRTHDAY = new Date('1998-12-26T00:00:00');
+
+function renderLifeCounters() {
+    const el = document.getElementById('life-counters');
+    if (!el) return;
+
+    const now = new Date();
+
+    const milestones = [
+        { age: 30, label: 'до 30 лет', color: '#4ade80' },
+        { age: 40, label: 'до 40 лет', color: '#facc15' },
+        { age: 50, label: 'до 50 лет', color: '#f472b6' },
+    ];
+
+    el.innerHTML = milestones.map(m => {
+        const target = new Date(BIRTHDAY);
+        target.setFullYear(BIRTHDAY.getFullYear() + m.age);
+
+        const prevBirthday = new Date(BIRTHDAY);
+        prevBirthday.setFullYear(BIRTHDAY.getFullYear() + m.age - 10);
+
+        const totalMs = target - prevBirthday;
+        const remainMs = target - now;
+        const daysLeft = Math.max(0, Math.ceil(remainMs / 86400000));
+        const pct = Math.min(100, Math.max(0, ((totalMs - remainMs) / totalMs) * 100));
+
+        const isPast = remainMs < 0;
+
+        return `
+            <div style="margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:14px; font-weight:600; color:var(--text-main);">${m.label}</span>
+                    <span style="font-size:13px; color:var(--text-muted);">
+                        ${isPast ? 'позади' : `${daysLeft.toLocaleString('ru-RU')} дней`}
+                    </span>
+                </div>
+                <div style="height:6px; background:rgba(255,255,255,0.06); border-radius:10px; overflow:hidden;">
+                    <div style="height:100%; width:${pct.toFixed(1)}%; background:${m.color}; border-radius:10px; transition:width 0.4s ease;"></div>
+                </div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:5px;">${pct.toFixed(1)}% десятилетия прожито</div>
+            </div>
+        `;
+    }).join('');
 }
 
 function renderSpheres() {
