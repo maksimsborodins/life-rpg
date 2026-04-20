@@ -113,34 +113,52 @@
 
     <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
-            <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+
+            <!-- Фиксированный заголовок -->
+            <div class="modal-header">
                 <h3>Настройки</h3>
-                <button id="close-settings" style="background:none; border:none; color:white; cursor:pointer; font-size:20px;">✕</button>
+                <button id="close-settings" class="modal-close">✕</button>
             </div>
 
-            <div id="settings-spheres" style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;"></div>
-            <button id="save-spheres" class="btn-hero">Сохранить сферы</button>
+            <!-- Скроллируемое тело -->
+            <div class="modal-body">
 
-            <hr style="margin:24px 0; border:none; border-top:1px solid var(--border);">
+                <div id="settings-spheres" style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;"></div>
+                <button id="save-spheres" class="btn-hero" style="width:100%;">Сохранить сферы</button>
 
-            <div id="settings-habits" style="margin-bottom:16px;"></div>
-            <div style="display:flex; gap:8px;">
-                <input id="new-habit-name" type="text" placeholder="Новая привычка" style="flex-grow:1; background:var(--bg-main); border:1px solid var(--border); color:white; padding:12px; border-radius:12px; font-family:Inter,sans-serif;">
-                <button id="add-habit" class="btn-hero">Добавить</button>
+                <hr style="margin:24px 0; border:none; border-top:1px solid var(--border);">
+
+                <div id="settings-habits" style="margin-bottom:16px;"></div>
+                <div style="display:flex; gap:8px;">
+                    <input id="new-habit-name" type="text" placeholder="Новая привычка"
+                        style="flex-grow:1; background:var(--bg-main); border:1px solid var(--border); color:white; padding:12px; border-radius:12px; font-family:Inter,sans-serif;">
+                    <button id="add-habit" class="btn-hero">Добавить</button>
+                </div>
+
+                <hr style="margin:24px 0; border:none; border-top:1px solid var(--border);">
+
+                <p style="color:var(--text-muted); font-size:13px; margin-bottom:12px;">Синхронизация между ПК</p>
+                <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+                    <input id="sync-token" type="password" placeholder="GitHub Token"
+                        style="background:var(--bg-main); border:1px solid var(--border); color:white; padding:12px; border-radius:12px; font-family:Inter,sans-serif; font-size:13px;">
+                    <input id="sync-gist-id" type="text" placeholder="Gist ID"
+                        style="background:var(--bg-main); border:1px solid var(--border); color:white; padding:12px; border-radius:12px; font-family:Inter,sans-serif; font-size:13px;">
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button id="export-btn" class="btn-hero" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <span>☁️</span><span>Сохранить</span>
+                    </button>
+                    <button id="import-btn" class="btn-hero" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <span>📥</span><span>Загрузить</span>
+                    </button>
+                </div>
+                <p id="sync-status" style="font-size:12px; color:var(--text-muted); margin-top:8px; min-height:16px;"></p>
+
+                <hr style="margin:24px 0; border:none; border-top:1px solid var(--border);">
+
+                <button id="reset-today" class="btn-reset-today">Сбросить выбор на сегодня</button>
+
             </div>
-
-            <hr style="margin:24px 0; border:none; border-top:1px solid var(--border);">
-
-            <p style="color:var(--text-muted); font-size:13px; margin-bottom:12px;">Синхронизация между ПК</p>
-            <div style="display:flex; gap:8px;">
-                <button id="export-btn" class="btn-hero" style="flex:1;">📤 Экспорт</button>
-                <label class="btn-hero" style="flex:1; text-align:center; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                    📥 Импорт
-                    <input id="import-input" type="file" accept=".json" style="display:none;">
-                </label>
-            </div>
-            <hr style="margin:24px 0; border:none; border-top:1px solid var(--border);">
-            <button id="reset-today" class="btn-reset-today">Сбросить выбор на сегодня</button>
         </div>
     </div>
 
