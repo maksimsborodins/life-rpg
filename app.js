@@ -46,6 +46,8 @@ function saveData(opts = {}) {
     renderSpheres();
     renderHabits();
     if (opts.wheel) drawWheel();
+    // автосохранение в Gist
+    autoSyncSave();
 }
 
 const ui = {
@@ -83,7 +85,8 @@ function init() {
         data.lastVisit = today;
         saveData({ wheel: false });
     }
-
+    // автозагрузка при старте
+    autoSyncLoad();
     setInterval(updateGreeting, 60000);
 }
 
@@ -317,6 +320,43 @@ function saveSyncCredentials() {
 function setSyncStatus(msg, color = 'var(--text-muted)') {
     const el = document.getElementById('sync-status');
     if (el) { el.textContent = msg; el.style.color = color; }
+}
+
+async function autoSyncSave() {
+    const { token, gistId } = getSyncCredentials();
+    if (!token || !gistId) return;
+    try {
+        await fetch(`https://api.github.com/gists/${gistId}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `token ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                files: { 'project-life.json': { content: JSON.stringify(data, null, 2) } }
+            })
+        });
+    } catch {}
+}
+
+async function autoSyncLoad() {
+    const { token, gistId } = getSyncCredentials();
+    if (!token || !gistId) return;
+    try {
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+            headers: { 'Authorization': `token ${token}` }
+        });
+        const json = await res.json();
+        const content = json.files?.['project-life.json']?.content;
+        if (!content) return;
+        const remote = JSON.parse(content);
+        // берём данные с более поздней датой посещения
+        if (!data.lastVisit || (remote.lastVisit && remote.lastVisit >= data.lastVisit)) {
+            data = remote;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            renderAll();
+        }
+    } catch {}
 }
 
 async function exportData() {
