@@ -44,10 +44,6 @@ function saveData(opts = {}) {
 }
 
 const ui = {
-    statsDays: document.getElementById('stat-days'),
-    statsProgress: document.getElementById('stat-progress'),
-    statsAvg: document.getElementById('stat-avg'),
-    statsStreak: document.getElementById('stat-streak'),
     dashboardSpheres: document.getElementById('dashboard-spheres'),
     dashboardHabits: document.getElementById('dashboard-habits'),
     settingsModal: document.getElementById('settings-modal'),
