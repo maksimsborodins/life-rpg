@@ -37,7 +37,7 @@ function loadData() {
 function saveData(opts = {}) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     if (opts.skipRender) return;
-    renderStats();
+    renderHeader();
     renderSpheres();
     renderHabits();
     if (opts.wheel) drawWheel();
@@ -63,7 +63,7 @@ function init() {
     setupNavigation();
     setupEventListeners();
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA');
     if (data.lastVisit !== today) {
         data.habits.forEach(h => {
             if (!h.done) h.streak = 0;
@@ -87,21 +87,24 @@ function updateGreeting() {
 }
 
 function renderAll() {
-    renderStats();
+    renderHeader();
     renderSpheres();
     renderHabits();
     drawWheel();
 }
 
-function renderStats() {
-    if (!ui.statsDays) return;
-    const days = data.openedDays.length;
-    ui.statsDays.textContent = days;
-    ui.statsProgress.textContent = ((days / TOTAL_DAYS) * 100).toFixed(5) + '%';
+function renderHeader() {
     const totalScore = data.spheres.reduce((sum, s) => sum + s.score, 0);
     const avg = (totalScore / data.spheres.length).toFixed(1);
-    ui.statsAvg.textContent = avg;
-    ui.statsStreak.textContent = days;
+    const doneTodayCount = data.habits.filter(h => h.done).length;
+    const totalHabits = data.habits.length;
+
+    const statsEl = document.getElementById('header-stats');
+    if (!statsEl) return;
+    statsEl.innerHTML = `
+        <span>⚡ Средний балл: <b>${avg}</b></span>
+        <span>✅ Привычки сегодня: <b>${doneTodayCount}/${totalHabits}</b></span>
+    `;
 }
 
 function renderSpheres() {
