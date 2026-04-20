@@ -293,3 +293,9 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
   transition: border-color 0.15s;
 }
 .input-field:focus { border-color: var(--accent); }
+
+.sphere-item.sphere-checked {
+  border-color: rgba(192, 132, 252, 0.6);
+  background: rgba(192, 132, 252, 0.08);
+  box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.4);
+}
